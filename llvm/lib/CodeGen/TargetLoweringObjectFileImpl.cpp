@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This file implements classes used to handle lowerings specific to common
@@ -207,6 +209,13 @@ void TargetLoweringObjectFileELF::Initialize(MCContext &Ctx,
     PersonalityEncoding = dwarf::DW_EH_PE_absptr;
     TTypeEncoding = dwarf::DW_EH_PE_absptr;
     break;
+  // IPU local patch begin
+  case Triple::colossus:
+    LSDAEncoding = dwarf::DW_EH_PE_absptr;
+    PersonalityEncoding = dwarf::DW_EH_PE_absptr;
+    TTypeEncoding = dwarf::DW_EH_PE_absptr;
+    break;
+  // IPU local patch end
   case Triple::mips:
   case Triple::mipsel:
   case Triple::mips64:

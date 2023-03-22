@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This tablegen backend emits a target specifier matcher for converting parsed
@@ -1966,7 +1968,11 @@ emitConvertFuncs(CodeGenTarget &Target, StringRef ClassName,
           << "unsigned Opcode,\n"
           << "                const OperandVector &Operands) {\n";
   }
-  CvtOS << "  assert(Kind < CVT_NUM_SIGNATURES && \"Invalid signature!\");\n";
+  // IPU local patch begin
+  // IPU TODO
+  CvtOS << "  assert(Kind < CVT_NUM_SIGNATURES && \"Invalid signature!\");\n"
+        << "  unsigned NumMCOperands = 0;\n";
+  // IPU local patch end
   CvtOS << "  const uint8_t *Converter = ConversionTable[Kind];\n";
   if (HasOptionalOperands) {
     size_t MaxNumOperands = 0;
@@ -1995,7 +2001,11 @@ emitConvertFuncs(CodeGenTarget &Target, StringRef ClassName,
   CvtOS << "    default: llvm_unreachable(\"invalid conversion entry!\");\n";
   CvtOS << "    case CVT_Reg:\n";
   CvtOS << "      static_cast<" << TargetOperandClass
-        << " &>(*Operands[OpIdx]).addRegOperands(Inst, 1);\n";
+  // IPU local patch begin
+        << " &>(*Operands[OpIdx]).addRegOperands(Inst, 1);\n"
+        << "      Operands[OpIdx]->setMCOperandNum(NumMCOperands);\n"
+        << "      ++NumMCOperands;\n";
+  // IPU local patch end
   CvtOS << "      break;\n";
   CvtOS << "    case CVT_Tied: {\n";
   CvtOS << "      assert(OpIdx < (size_t)(std::end(TiedAsmOperandTable) -\n";
@@ -2004,6 +2014,9 @@ emitConvertFuncs(CodeGenTarget &Target, StringRef ClassName,
   CvtOS << "      unsigned TiedResOpnd = TiedAsmOperandTable[OpIdx][0];\n";
   CvtOS << "      if (TiedResOpnd != (uint8_t)-1)\n";
   CvtOS << "        Inst.addOperand(Inst.getOperand(TiedResOpnd));\n";
+  // IPU local patch begin
+  CvtOS << "      ++NumMCOperands;\n";
+  // IPU local patch end
   CvtOS << "      break;\n";
   CvtOS << "    }\n";
 
@@ -2066,6 +2079,10 @@ emitConvertFuncs(CodeGenTarget &Target, StringRef ClassName,
       CvtOS << "    case CVT_"
             << getEnumNameForToken(AsmMatchConverter) << ":\n"
             << "      " << AsmMatchConverter << "(Inst, Operands);\n"
+            // IPU local patch begin
+            << "      Operands[OpIdx]->setMCOperandNum(NumMCOperands);\n"
+            << "      ++NumMCOperands;\n"
+            // IPU local patch end
             << "      break;\n";
 
       // FIXME: Handle the operand number lookup for custom match functions.
@@ -2142,6 +2159,10 @@ emitConvertFuncs(CodeGenTarget &Target, StringRef ClassName,
                 << " &>(*Operands[OpIdx])." << Op.Class->RenderMethod
                 << "(Inst, " << OpInfo.MINumOperands << ");\n";
         }
+        // IPU local patch begin
+        CvtOS << "      Operands[OpIdx]->setMCOperandNum(NumMCOperands);\n"
+              << "      NumMCOperands += " << OpInfo.MINumOperands << ";\n";
+        // IPU local patch end
         CvtOS << "      break;\n";
 
         // Add a handler for the operand number lookup.
@@ -2199,6 +2220,10 @@ emitConvertFuncs(CodeGenTarget &Target, StringRef ClassName,
 
         CvtOS << "    case " << Name << ":\n"
               << "      Inst.addOperand(MCOperand::createImm(" << Val << "));\n"
+              // IPU local patch begin
+              << "      Operands[OpIdx]->setMCOperandNum(NumMCOperands);\n"
+              << "      ++NumMCOperands;\n"
+              // IPU local patch end
               << "      break;\n";
 
         OpOS << "    case " << Name << ":\n"
@@ -2230,6 +2255,10 @@ emitConvertFuncs(CodeGenTarget &Target, StringRef ClassName,
           break;
         CvtOS << "    case " << Name << ":\n"
               << "      Inst.addOperand(MCOperand::createReg(" << Reg << "));\n"
+              // IPU local patch begin
+              << "      Operands[OpIdx]->setMCOperandNum(NumMCOperands);\n"
+              << "      ++NumMCOperands;\n"
+              // IPU local patch end
               << "      break;\n";
 
         OpOS << "    case " << Name << ":\n"

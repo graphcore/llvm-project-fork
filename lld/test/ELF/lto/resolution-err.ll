@@ -1,3 +1,7 @@
+; This file has been modified by Graphcore Ltd.
+; IPU local patch begin
+; UNSUPPORTED: true
+; IPU local patch end
 ; UNSUPPORTED: system-windows
 ; REQUIRES: shell
 ; RUN: llvm-as %s -o %t.bc

@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 # -*- Python -*-
 
 import os
@@ -67,6 +68,9 @@ llvm_config.feature_config(
                           'AMDGPU': 'amdgpu',
                           'ARM': 'arm',
                           'AVR': 'avr',
+# IPU local patch begin
+                          'Colossus': 'colossus',
+# IPU local patch end
                           'Hexagon': 'hexagon',
                           'Mips': 'mips',
                           'MSP430': 'msp430',

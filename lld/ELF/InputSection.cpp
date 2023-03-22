@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #include "InputSection.h"
@@ -1229,7 +1231,11 @@ template <class ELFT> void InputSection::writeTo(uint8_t *buf) {
   // Copy section contents from source object file to output file
   // and then apply relocations.
   memcpy(buf, rawData.data(), rawData.size());
-  relocate<ELFT>(buf, buf + rawData.size());
+  // IPU local patch begin
+  if (!config->ignoreRelocations) {
+    relocate<ELFT>(buf, buf + rawData.size());
+  }
+  // IPU local patch end
 }
 
 void InputSection::replace(InputSection *other) {

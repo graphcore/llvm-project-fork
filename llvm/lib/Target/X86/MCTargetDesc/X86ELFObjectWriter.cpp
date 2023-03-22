@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #include "MCTargetDesc/X86FixupKinds.h"
@@ -106,7 +108,9 @@ static unsigned getRelocType64(MCContext &Ctx, SMLoc Loc,
                                MCFixupKind Kind) {
   switch (Modifier) {
   default:
-    llvm_unreachable("Unimplemented");
+    // IPU local patch begin
+    Ctx.reportError(Loc, "unsupported relocation on symbol");
+    // IPU local patch end
   case MCSymbolRefExpr::VK_None:
   case MCSymbolRefExpr::VK_X86_ABS8:
     switch (Type) {

@@ -1,0 +1,40 @@
+# RUN: llc -march=colossus -verify-machineinstrs -run-pass colossus-and-elim -o - %s | FileCheck %s
+
+---
+name:            unnecessary_and_reg_alias
+tracksRegLiveness: true
+stack:
+  - { id: 0, name: '', type: spill-slot, offset: 0, size: 8, alignment: 8,
+      stack-id: default, callee-saved-register: '', callee-saved-restored: true,
+      debug-info-variable: '', debug-info-expression: '', debug-info-location: '' }
+machineFunctionInfo: {}
+body:             |
+  bb.0:
+    liveins: $m0
+
+    ADJCALLSTACKDOWN 0, 0, implicit-def dead $sp, implicit $sp
+    ST32_FI $m0, %stack.0, 0 :: (store (s32) into %stack.0)
+    ST32_FI $m0, %stack.0, 1 :: (store (s32) into %stack.0)
+
+    $m2 = LDZ8_ZI killed $m0, $mzero, 0, 0
+    $md1 = LD64_FI %stack.0, 0
+    $m1 = AND_ZI killed $m2, 255, 0
+    $m1 = CMPEQ_ZI killed $m1, 15, 0
+    ADJCALLSTACKUP 0, 0, implicit-def dead $sp, implicit $sp
+    RTN_PSEUDO
+    RTN_REG_HOLDER
+
+...
+
+# Check that the below AND_ZI is *not* eliminated
+# CHECK: ADJCALLSTACKDOWN 0, 0, implicit-def dead $sp, implicit $sp
+# CHECK-NEXT: ST32_FI $m0, %stack.0, 0 :: (store (s32) into %stack.0)
+# CHECK-NEXT: ST32_FI $m0, %stack.0, 1 :: (store (s32) into %stack.0)
+
+# CHECK-NEXT: $m2 = LDZ8_ZI killed $m0, $mzero, 0, 0
+# CHECK-NEXT: $md1 = LD64_FI %stack.0, 0
+# CHECK-NEXT: $m1 = AND_ZI killed $m2, 255, 0
+# CHECK-NEXT: $m1 = CMPEQ_ZI killed $m1, 15, 0
+# CHECK-NEXT: ADJCALLSTACKUP 0, 0, implicit-def dead $sp, implicit $sp
+# CHECK-NEXT: RTN_PSEUDO
+# CHECK-NEXT: RTN_REG_HOLDER

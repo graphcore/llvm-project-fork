@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 //  This file implements decl-related attribute processing.
@@ -418,6 +420,28 @@ static void handleSimpleAttributeOrDiagnose(Sema &S, Decl *D,
   }
   handleSimpleAttribute<AttrType>(S, D, CI);
 }
+
+// IPU local patch begin
+static void handlePoplarConstraintAttr(Sema &S, Decl *D,
+                                       const ParsedAttr &Attr) {
+  if (!Attr.checkAtLeastNumArgs(S, 1))
+    return;
+  std::vector<StringRef> constraints;
+  for (unsigned c = 0; c != Attr.getNumArgs(); ++c) {
+    StringRef constraint;
+    SourceLocation LiteralLoc;
+    if (!S.checkStringLiteralArgumentAttr(Attr, c, constraint, &LiteralLoc))
+      return;
+    constraints.push_back(constraint);
+  }
+  AttributeCommonInfo I(Attr.getRange(),
+                        AttributeCommonInfo::NoSemaHandlerAttribute,
+                        AttributeCommonInfo::AS_CXX11,
+                        Attr.getAttributeSpellingListIndex());
+  D->addAttr(::new (S.Context) PoplarConstraintAttr(
+      S.Context, I, constraints.data(), constraints.size()));
+}
+// IPU local patch end
 
 /// Check if the passed-in expression is of type int or bool.
 static bool isIntOrBool(Expr *Exp) {
@@ -5620,12 +5644,15 @@ static void handleBuiltinAliasAttr(Sema &S, Decl *D,
   bool IsAArch64 = S.Context.getTargetInfo().getTriple().isAArch64();
   bool IsARM = S.Context.getTargetInfo().getTriple().isARM();
   bool IsRISCV = S.Context.getTargetInfo().getTriple().isRISCV();
+  // IPU local patch begin
+  bool IsColossus = S.Context.getTargetInfo().getTriple().isColossus();
+  // IPU local patch end
   bool IsHLSL = S.Context.getLangOpts().HLSL;
   if ((IsAArch64 && !ArmSveAliasValid(S.Context, BuiltinID, AliasName)) ||
       (IsARM && !ArmMveAliasValid(BuiltinID, AliasName) &&
        !ArmCdeAliasValid(BuiltinID, AliasName)) ||
       (IsRISCV && !RISCVAliasValid(BuiltinID, AliasName)) ||
-      (!IsAArch64 && !IsARM && !IsRISCV && !IsHLSL)) {
+      (!IsAArch64 && !IsARM && !IsRISCV && !IsHLSL && !IsColossus)) {
     S.Diag(AL.getLoc(), diag::err_attribute_builtin_alias) << AL;
     return;
   }
@@ -9035,7 +9062,20 @@ ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D, const ParsedAttr &AL,
   // XRay attributes.
   case ParsedAttr::AT_XRayLogArgs:
     handleXRayLogArgsAttr(S, D, AL);
+	break;
+
+  // IPU local patch begin
+  // Colossus attributes.
+  // TODO: merge with PoplarVertex below.
+  case ParsedAttr::AT_ColossusVertex:
+    handleSimpleAttribute<ColossusVertexAttr>(S, D, AL);
     break;
+
+  // Poplar attributes.
+  case ParsedAttr::AT_PoplarConstraint:
+    handlePoplarConstraintAttr(S, D, AL);
+    break;
+  // IPU local patch end
 
   case ParsedAttr::AT_PatchableFunctionEntry:
     handlePatchableFunctionEntryAttr(S, D, AL);

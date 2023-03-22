@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 # This directory contains a large amount of C code which provides
 # generic implementations of the core runtime library along with optimized
 # architecture-specific code in various subdirectories.
@@ -689,6 +690,35 @@ set(ve_SOURCES
   ${GENERIC_TF_SOURCES}
   ${GENERIC_SOURCES})
 
+# IPU Local patch begin
+set(ipu_SOURCES
+  ipu/enable_execute_stack.c
+  ipu/emutls.c
+  ipu/eprintf.c
+  ipu/int_util.c
+  ipu/st16f.S
+  ipu/st16f_misaligned.c
+  ipu/st32f_align1.S
+  ipu/st32f_align2.S
+  ipu/st8.S
+  ipu/st16.S
+  ipu/st16_misaligned_supervisor.c
+  ipu/st16_misaligned_worker.c
+  ipu/st32_align1_supervisor.c
+  ipu/st32_align1_worker.c
+  ipu/st32_align2_supervisor.c
+  ipu/st32_align2_worker.c
+  ipu/strict_f32cmp.S
+  ipu/divsi3_supervisor.c
+  ipu/divsi3_worker.c
+  ipu/modsi3.c
+  ipu/udivsi3_supervisor.c
+  ipu/udivsi3_worker.c
+  ipu/umodsi3.c
+  ${GENERIC_SOURCES})
+filter_builtin_sources(ipu_SOURCES EXCLUDE ipu_SOURCES "${ipu_SOURCES};${GENERIC_SOURCES}")
+# IPU Local patch end
+
 add_custom_target(builtins)
 set_target_properties(builtins PROPERTIES FOLDER "Compiler-RT Misc")
 
@@ -766,6 +796,12 @@ else ()
       if("${arch}" STREQUAL "riscv32")
         list(APPEND BUILTIN_CFLAGS_${arch} -fforce-enable-int128)
       endif()
+      
+      # IPU Local patch begin
+      if("${arch}" STREQUAL "ipu")
+        list(APPEND BUILTIN_CFLAGS -mllvm -colossus-enable-target-checks)
+      endif()
+      # IPU Local patch end
 
       if(arch STREQUAL "aarch64")
         add_custom_target(

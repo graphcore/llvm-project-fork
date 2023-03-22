@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_MC_MCASMBACKEND_H
@@ -150,6 +152,14 @@ public:
                                  const MCSubtargetInfo &STI) const {
     return false;
   }
+
+  // IPU local patch begin
+  /// Check whether the given instruction should be emitted as a relaxable
+  /// fragment.
+  ///
+  /// \param Inst - The instruction to test.
+  virtual bool needsRelaxableFragment(const MCInst &Inst) { return false; }
+  // IPU local patch end
 
   /// Target specific predicate for whether a given fixup requires the
   /// associated instruction to be relaxed.

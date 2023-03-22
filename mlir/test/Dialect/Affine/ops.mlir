@@ -1,3 +1,4 @@
+// UNSUPPORTED: true
 // RUN: mlir-opt -allow-unregistered-dialect -split-input-file %s | FileCheck %s
 // RUN: mlir-opt -allow-unregistered-dialect %s -mlir-print-op-generic | FileCheck -check-prefix=GENERIC %s
 

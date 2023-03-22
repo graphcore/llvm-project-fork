@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This program is a utility that works like binutils "objdump", that is, it
@@ -33,6 +35,9 @@
 #include "llvm/ADT/StringSet.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/ADT/Twine.h"
+// IPU local patch begin
+#include "llvm/CodeGen/TargetOpcodes.h"
+// IPU local patch end
 #include "llvm/DebugInfo/DWARF/DWARFContext.h"
 #include "llvm/DebugInfo/Symbolize/SymbolizableModule.h"
 #include "llvm/DebugInfo/Symbolize/Symbolize.h"
@@ -594,6 +599,39 @@ public:
 };
 HexagonPrettyPrinter HexagonPrettyPrinterInst;
 
+// IPU local patch begin
+class ColossusPrettyPrinter : public PrettyPrinter {
+public:
+  void printInst(MCInstPrinter &IP, const MCInst *MI, ArrayRef<uint8_t> Bytes,
+                 object::SectionedAddress Address, formatted_raw_ostream &OS,
+                 StringRef Annot, MCSubtargetInfo const &STI, SourcePrinter *SP,
+                 StringRef ObjectFileName, std::vector<RelocationRef> *Rels,
+                 LiveVariablePrinter &LVP) override {
+
+    // Custom handling for bundles
+    if (MI && MI->getOpcode() == TargetOpcode::BUNDLE) {
+      std::string indent = ShowRawInsn ? "\t\t\t\t" : "\t\t";
+      OS << indent << "{\n";
+      PrettyPrinter::printInst(IP, MI->getOperand(0).getInst(),
+                               Bytes.slice(0, 4), Address, OS, Annot, STI, SP,
+                               ObjectFileName, Rels, LVP);
+      OS << "\n";
+      Address.Address += 4;
+      PrettyPrinter::printInst(IP, MI->getOperand(1).getInst(),
+                               Bytes.slice(4, 4), Address, OS, Annot, STI, SP,
+                               ObjectFileName, Rels, LVP);
+      OS << "\n" << indent << "}";
+      
+    } else {
+      // Fall through to default printer
+      PrettyPrinter::printInst(IP, MI, Bytes, Address, OS, Annot, STI, SP,
+                               ObjectFileName, Rels, LVP);
+    }
+  }
+};
+ColossusPrettyPrinter ColossusPrettyPrinterInst;
+// IPU local patch end
+
 class AMDGCNPrettyPrinter : public PrettyPrinter {
 public:
   void printInst(MCInstPrinter &IP, const MCInst *MI, ArrayRef<uint8_t> Bytes,
@@ -765,6 +803,10 @@ PrettyPrinter &selectPrettyPrinter(Triple const &Triple) {
   case Triple::bpfel:
   case Triple::bpfeb:
     return BPFPrettyPrinterInst;
+// IPU local patch begin
+  case Triple::colossus:
+    return ColossusPrettyPrinterInst;
+// IPU local patch end
   case Triple::arm:
   case Triple::armeb:
   case Triple::thumb:

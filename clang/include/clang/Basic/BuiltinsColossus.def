@@ -1,0 +1,197 @@
+//==- BuiltinsColossus.def - Colossus Builtin function database --*- C++ -*-==//
+//    Copyright (c) 2023 Graphcore Ltd. All Rights Reserved.
+//     Licensed under the Apache License, Version 2.0 (the "License");
+//     you may not use this file except in compliance with the License.
+//     You may obtain a copy of the License at
+//
+//        http://www.apache.org/licenses/LICENSE-2.0
+//
+//     Unless required by applicable law or agreed to in writing, software
+//     distributed under the License is distributed on an "AS IS" BASIS,
+//     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//     See the License for the specific language governing permissions and
+//     limitations under the License.
+// --- LLVM Exceptions to the Apache 2.0 License ----
+//
+// As an exception, if, as a result of your compiling your source code, portions
+// of this Software are embedded into an Object form of such source code, you
+// may redistribute such embedded portions in such Object form without complying
+// with the conditions of Sections 4(a), 4(b) and 4(d) of the License.
+//
+// In addition, if you combine or link compiled forms of this Software with
+// software that is licensed under the GPLv2 ("Combined Software") and if a
+// court of competent jurisdiction determines that the patent provision (Section
+// 3), the indemnity provision (Section 9) or other Section of the License
+// conflicts with the conditions of the GPLv2, you may retroactively and
+// prospectively choose to deem waived or otherwise exclude such Section(s) of
+// the License, but only in their entirety and only with respect to the Combined
+// Software.
+//
+//===----------------------------------------------------------------------===//
+//
+// This file defines the Colossus-specific builtin function database.  Users of
+// this file must define the BUILTIN macro to make use of this information.
+//
+//===----------------------------------------------------------------------===//
+
+// The format of this database matches clang/Basic/Builtins.def.
+
+#if defined(BUILTIN) && !defined(TARGET_BUILTIN)
+#   define TARGET_BUILTIN(ID, TYPE, ATTRS, FEATURE) BUILTIN(ID, TYPE, ATTRS)
+#endif
+
+// IPU specific builtins:
+TARGET_BUILTIN(__builtin_ipu_get_scount_l, "Ui", "c", "supervisor")
+TARGET_BUILTIN(__builtin_ipu_get_scount_u, "Ui", "c", "supervisor")
+TARGET_BUILTIN(__builtin_ipu_get_vertex_base, "v*", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_get_tile_id, "Ui", "c", "supervisor")
+BUILTIN(__builtin_ipu_is_worker_mode, "b", "c")
+TARGET_BUILTIN(__builtin_ipu_get_worker_id, "Ui", "c", "worker")
+
+
+// Targeting integer instructions:
+TARGET_BUILTIN(__builtin_ipu_tapack, "V2UivC*vC*vC*", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_urand32, "Ui", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_urand64, "ULLi", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_urand_f16, "h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_urand_f32, "f", "c", "worker")
+
+
+// Targeting system instructions:
+BUILTIN(__builtin_ipu_put, "vUiUIc", "c")
+TARGET_BUILTIN(__builtin_ipu_uput, "vUiUIc", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_uputf, "vfUIc", "c", "worker")
+BUILTIN(__builtin_ipu_get, "UiUIc", "c")
+TARGET_BUILTIN(__builtin_ipu_uget, "UiUIc", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_ugetf, "fUIc", "c", "worker")
+
+
+// Targeting bit operation instructions:
+BUILTIN(__builtin_ipu_and_i32, "iii", "c")
+TARGET_BUILTIN(__builtin_ipu_and_f32, "fff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_and_v2f32, "V2fV2fV2f", "c", "worker")
+BUILTIN(__builtin_ipu_andc_i32, "iii", "c")
+TARGET_BUILTIN(__builtin_ipu_andc_f32, "fff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_andc_v2f32, "V2fV2fV2f", "c", "worker")
+BUILTIN(__builtin_ipu_or_i32, "iii", "c")
+TARGET_BUILTIN(__builtin_ipu_or_f32, "fff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_or_v2f32, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_not_f32, "ff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_not_v2f32, "V2fV2f", "c", "worker")
+
+BUILTIN(__builtin_ipu_bitrev8, "UiUi", "c")
+BUILTIN(__builtin_ipu_cms, "Uii", "c")
+TARGET_BUILTIN(__builtin_ipu_roll32, "V2fV2fV2f", "c", "worker")
+BUILTIN(__builtin_ipu_roll8l, "UiUiUi", "c")
+BUILTIN(__builtin_ipu_roll8r, "UiUiUi", "c")
+
+BUILTIN(__builtin_ipu_shuf8x8hi, "UiUiUi", "c")
+BUILTIN(__builtin_ipu_shuf8x8lo, "UiUiUi", "c")
+TARGET_BUILTIN(__builtin_ipu_sort4x32hi, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_sort4x32lo, "V2fV2fV2f", "c", "worker")
+BUILTIN(__builtin_ipu_sort8x8hi, "UiUiUi", "c")
+BUILTIN(__builtin_ipu_sort8x8lo, "UiUiUi", "c")
+BUILTIN(__builtin_ipu_sort8, "UiUi", "c")
+BUILTIN(__builtin_ipu_swap8, "UiUi", "c")
+
+
+// Targeting float operation instructions:
+TARGET_BUILTIN(__builtin_ipu_f16v2absadd, "V2hV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4absadd, "V4hV4hV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2absadd, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32absadd, "fff", "c", "worker")
+
+TARGET_BUILTIN(__builtin_ipu_f16v2absmax, "V2hV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4absmax, "V4hV4hV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2absmax, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32absmax, "fff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2max, "V2hV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4max, "V4hV4hV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2max, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32max, "fff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2maxc, "hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4maxc, "V2hV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2min, "V2hV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4min, "V4hV4hV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2min, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32min, "fff", "c", "worker")
+
+TARGET_BUILTIN(__builtin_ipu_f16v2clamp, "V2hV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4clamp, "V4hV4hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2clamp, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32clamp, "ffV2f", "c", "worker")
+
+TARGET_BUILTIN(__builtin_ipu_f16v2cmac, "vV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4cmac, "vV4hV4h", "c", "worker")
+
+TARGET_BUILTIN(__builtin_ipu_f16v2exp, "V2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2exp2, "V2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2ln, "V2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2log2, "V2hV2h", "c", "worker")
+
+TARGET_BUILTIN(__builtin_ipu_f16v4rmask, "V4hV4hf", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2rmask, "V2fV2ff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2sigm, "V2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32sigm, "ff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2sum, "fV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4sum, "V2fV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2tanh, "V2hV2h", "c", "worker")
+
+TARGET_BUILTIN(__builtin_ipu_f32v2aop, "vV2fV2fUIc", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2axpy, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2gina, "V2hV2hUIi", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2gina, "V2fV2fUIi", "c", "worker")
+
+TARGET_BUILTIN(__builtin_ipu_f16v2grand, "V2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2grand, "V2f", "c", "worker")
+
+
+// Targeting float comparison instructions:
+TARGET_BUILTIN(__builtin_ipu_f16v2cmpeq, "V2hV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4cmpeq, "V4hV4hV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2cmpeq, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32cmpeq, "fff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2cmpge, "V2hV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4cmpge, "V4hV4hV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2cmpge, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32cmpge, "fff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2cmpgt, "V2hV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4cmpgt, "V4hV4hV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2cmpgt, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32cmpgt, "fff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2cmple, "V2hV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4cmple, "V4hV4hV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2cmple, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32cmple, "fff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2cmplt, "V2hV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4cmplt, "V4hV4hV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2cmplt, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32cmplt, "fff", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v2cmpne, "V2hV2hV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4cmpne, "V4hV4hV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2cmpne, "V2fV2fV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32cmpne, "fff", "c", "worker")
+
+
+// Float classification:
+TARGET_BUILTIN(__builtin_ipu_f16v2class, "V2sV2h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f16v4class, "V4sV4h", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32v2class, "V2sV2f", "c", "worker")
+TARGET_BUILTIN(__builtin_ipu_f32class, "if", "c", "worker")
+
+BUILTIN(__builtin_ipu_isfinite_f32, "if", "nc")
+BUILTIN(__builtin_ipu_isfinite_v2f16, "V2sV2h", "nc")
+BUILTIN(__builtin_ipu_isfinite_v2f32, "V2iV2f", "nc")
+BUILTIN(__builtin_ipu_isfinite_v4f16, "V4sV4h", "nc")
+
+BUILTIN(__builtin_ipu_isinf_f32, "if", "nc")
+BUILTIN(__builtin_ipu_isinf_v2f16, "V2sV2h", "nc")
+BUILTIN(__builtin_ipu_isinf_v2f32, "V2iV2f", "nc")
+BUILTIN(__builtin_ipu_isinf_v4f16, "V4sV4h", "nc")
+
+BUILTIN(__builtin_ipu_isnan_f32, "if", "nc")
+BUILTIN(__builtin_ipu_isnan_v2f16, "V2sV2h", "nc")
+BUILTIN(__builtin_ipu_isnan_v2f32, "V2iV2f", "nc")
+BUILTIN(__builtin_ipu_isnan_v4f16, "V4sV4h", "nc")
+
+#undef BUILTIN

@@ -1,3 +1,4 @@
+// This file has been modified by Graphcore Ltd.
 /// Don't create symlinks on Windows
 // UNSUPPORTED: system-windows
 
@@ -103,8 +104,11 @@
 
 /// Pick "gcc" as a fallback. Don't pick $DEFAULT_TRIPLE-gcc.
 // RUN: rm %t/env/gcc
-// RUN: env "PATH=%t/env/" %t/clang -### -target notreal-none-elf %s 2>&1 | \
-// RUN:   FileCheck --check-prefix=DEFAULT_TRIPLE_NO_OTHERS %s
+// IPU local patch begin
+// Disable following test since default colossus target does not have GCC port.
+// RUN-DISABLE: env "PATH=%t/env/" %t/clang -### -target notreal-none-elf %s 2>&1 | \
+// RUN-DISABLE:   FileCheck --check-prefix=DEFAULT_TRIPLE_NO_OTHERS %s
+// IPU local patch end
 // DEFAULT_TRIPLE_NO_OTHERS: "gcc"
 
 /// -B paths are searched separately so default triple will win

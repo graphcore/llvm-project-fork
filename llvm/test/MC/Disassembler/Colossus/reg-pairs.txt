@@ -1,0 +1,52 @@
+# RUN: llvm-mc --disassemble %s -triple=colossus-graphcore-elf 2> %t.stderr 1> %t.sdtout 
+# RUN: FileCheck --check-prefix=CHECK-IPU1 %s < %t.sdtout
+# RUN: FileCheck --check-prefix=IPU1-WARN %s < %t.stderr
+
+#CHECK-IPU1: st64 $a0:1, $m2, $m15, 0
+0x00,0xf0,0x20,0x5f
+
+#IPU1-WARN: warning: invalid instruction encoding
+0x10,0xf0,0x20,0x5f
+
+#CHECK-IPU1: st64 $a2:3, $m2, $m15, 0
+0x20,0xf0,0x20,0x5f
+
+#IPU1-WARN: warning: invalid instruction encoding
+0x30,0xf0,0x20,0x5f
+
+#CHECK-IPU1: st64 $a4:5, $m2, $m15, 0
+0x40,0xf0,0x20,0x5f
+
+#IPU1-WARN: warning: invalid instruction encoding
+0x50,0xf0,0x20,0x5f
+
+#CHECK-IPU1: st64 $a6:7, $m2, $m15, 0
+0x60,0xf0,0x20,0x5f
+
+#IPU1-WARN: warning: invalid instruction encoding
+0x70,0xf0,0x20,0x5f
+
+
+#CHECK-IPU1: st64 $a8:9, $m2, $m15, 0
+0x80,0xf0,0x20,0x5f
+
+#IPU1-WARN: warning: invalid instruction encoding
+0x90,0xf0,0x20,0x5f
+
+#CHECK-IPU1: st64 $a10:11, $m2, $m15, 0
+0xa0,0xf0,0x20,0x5f
+
+#IPU1-WARN: warning: invalid instruction encoding
+0xb0,0xf0,0x20,0x5f
+
+#CHECK-IPU1: st64 $a12:13, $m2, $m15, 0
+0xc0,0xf0,0x20,0x5f
+
+#IPU1-WARN: warning: invalid instruction encoding
+0xd0,0xf0,0x20,0x5f
+
+#CHECK-IPU1: st64 $a14:15, $m2, $m15, 0
+0xe0,0xf0,0x20,0x5f
+
+#IPU1-WARN: warning: invalid instruction encoding
+0xf0,0xf0,0x20,0x5f

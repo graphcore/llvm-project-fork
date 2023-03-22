@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 from __future__ import print_function
 
 import argparse
@@ -399,6 +400,9 @@ def get_triple_from_march(march):
       'sparc': 'sparc',
       'hexagon': 'hexagon',
       've': 've',
+# IPU local patch begin
+      'colossus': 'colossus',
+# IPU local patch end
   }
   for prefix, triple in triples.items():
     if march.startswith(prefix):

@@ -1,6 +1,8 @@
+# This file has been modified by Graphcore Ltd.
 set(LLVM_TARGET_DEFINITIONS Options.td)
 tablegen(LLVM Options.inc -gen-opt-parser-defs)
 add_public_tablegen_target(ELFOptionsTableGen)
+
 
 if(LLVM_ENABLE_ZLIB)
   set(imported_libs ZLIB::ZLIB)
@@ -12,6 +14,9 @@ add_lld_library(lldELF
   Arch/AMDGPU.cpp
   Arch/ARM.cpp
   Arch/AVR.cpp
+# IPU local patch begin
+  Arch/Colossus.cpp
+# IPU local patch end
   Arch/Hexagon.cpp
   Arch/Mips.cpp
   Arch/MipsArchTree.cpp
@@ -50,6 +55,9 @@ add_lld_library(lldELF
   ${LLVM_TARGETS_TO_BUILD}
   BinaryFormat
   BitWriter
+# IPU local patch begin
+  ColossusArchInfo
+# IPU local patch end
   Core
   DebugInfoDWARF
   Demangle
@@ -64,7 +72,7 @@ add_lld_library(lldELF
   lldCommon
   ${imported_libs}
   ${LLVM_PTHREAD_LIB}
-
+ 
   DEPENDS
   ELFOptionsTableGen
   intrinsics_gen

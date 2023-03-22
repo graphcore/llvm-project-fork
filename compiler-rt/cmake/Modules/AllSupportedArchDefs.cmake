@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 set(ARM64 aarch64)
 set(ARM32 arm armhf)
 set(HEXAGON hexagon)
@@ -16,6 +17,9 @@ set(SPARCV9 sparcv9)
 set(WASM32 wasm32)
 set(WASM64 wasm64)
 set(VE ve)
+# IPU local patch begin
+set(IPU ipu)
+# IPU local patch end
 
 if(APPLE)
   set(ARM64 arm64)

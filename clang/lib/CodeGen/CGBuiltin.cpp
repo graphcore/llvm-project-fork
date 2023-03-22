@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This contains code to emit Builtin calls as LLVM code.
@@ -40,6 +42,9 @@
 #include "llvm/IR/IntrinsicsAMDGPU.h"
 #include "llvm/IR/IntrinsicsARM.h"
 #include "llvm/IR/IntrinsicsBPF.h"
+// IPU local patch begin
+#include "llvm/IR/IntrinsicsColossus.h"
+// IPU local patch end
 #include "llvm/IR/IntrinsicsHexagon.h"
 #include "llvm/IR/IntrinsicsNVPTX.h"
 #include "llvm/IR/IntrinsicsPowerPC.h"
@@ -5433,6 +5438,10 @@ static Value *EmitTargetArchBuiltinExpr(CodeGenFunction *CGF,
   case llvm::Triple::riscv32:
   case llvm::Triple::riscv64:
     return CGF->EmitRISCVBuiltinExpr(BuiltinID, E, ReturnValue);
+    // IPU local patch begin
+  case llvm::Triple::colossus:
+    return CGF->EmitColossusBuiltinExpr(BuiltinID, E);
+    // IPU local patch end
   default:
     return nullptr;
   }
@@ -19407,3 +19416,216 @@ Value *CodeGenFunction::EmitRISCVBuiltinExpr(unsigned BuiltinID,
   llvm::Function *F = CGM.getIntrinsic(ID, IntrinsicTypes);
   return Builder.CreateCall(F, Ops, "");
 }
+
+// IPU local patch begin
+static Value *EmitColossusFPTestBuiltinExpr(CodeGenFunction &CGF,
+                                            unsigned BuiltinID,
+                                            const CallExpr *E) {
+  Value *V = CGF.EmitScalarExpr(E->getArg(0));
+  llvm::Type *Ty = V->getType();
+  Value *Result;
+  if (!Ty->isVectorTy() && (Result = CGF.getTargetHooks().testFPKind(
+                                V, BuiltinID, CGF.Builder, CGF.CGM)))
+    return Result;
+
+  CodeGenFunction::CGFPOptionsRAII FPOptsRAII(CGF, E);
+  llvm::Type *ElemTy = Ty->getScalarType();
+  if (!CGF.Builder.getIsFPConstrained() ||
+      CGF.Builder.getDefaultConstrainedExcept() == fp::ebIgnore ||
+      !ElemTy->isIEEE()) {
+    // Code generation below is more efficient for isfinite than comparing for
+    // equality against infinity because the mask and the value being compared
+    // against is the same which gives better code in the case of vectors.
+    switch (BuiltinID) {
+    case Colossus::BI__builtin_ipu_isinf_f32:
+    case Colossus::BI__builtin_ipu_isinf_v2f16:
+    case Colossus::BI__builtin_ipu_isinf_v2f32:
+    case Colossus::BI__builtin_ipu_isinf_v4f16: {
+      Value *Fabs = EmitFAbs(CGF, V);
+      Constant *Infinity = ConstantFP::getInfinity(V->getType());
+      Value *FCmp =
+          CGF.Builder.CreateFCmp(CmpInst::FCMP_OEQ, Fabs, Infinity, "cmpinf");
+      return CGF.Builder.CreateZExt(FCmp, CGF.ConvertType(E->getType()));
+    }
+    case Colossus::BI__builtin_ipu_isnan_f32:
+    case Colossus::BI__builtin_ipu_isnan_v2f16:
+    case Colossus::BI__builtin_ipu_isnan_v2f32:
+    case Colossus::BI__builtin_ipu_isnan_v4f16: {
+      V = CGF.Builder.CreateFCmpUNO(V, V, "cmp");
+      return CGF.Builder.CreateZExt(V, CGF.ConvertType(E->getType()));
+    }
+    }
+  }
+
+  // Compute exponent mask and extract exponent.
+  llvm::IntegerType *IntElemTy =
+      CGF.Builder.getIntNTy(Ty->getScalarSizeInBits());
+  llvm::Type *IntTy = Ty->getWithNewType(IntElemTy);
+  Value *IntV = CGF.Builder.CreateBitCast(V, IntTy);
+  const llvm::fltSemantics &Semantics = ElemTy->getFltSemantics();
+  APInt ElemExpMask = APFloat::getInf(Semantics).bitcastToAPInt();
+  Value *ExpMask = ConstantInt::get(IntTy, ElemExpMask);
+  Value *ExpV = CGF.Builder.CreateAnd(IntV, ExpMask);
+  Value *FloatExpV = CGF.Builder.CreateBitCast(ExpV, Ty);
+  Value *FloatExpMask = CGF.Builder.CreateBitCast(ExpMask, Ty);
+
+  switch (BuiltinID) {
+  case Colossus::BI__builtin_ipu_isfinite_f32:
+  case Colossus::BI__builtin_ipu_isfinite_v2f16:
+  case Colossus::BI__builtin_ipu_isfinite_v2f32:
+  case Colossus::BI__builtin_ipu_isfinite_v4f16: {
+    Value *ExpCmp =
+        CGF.Builder.CreateFCmpS(FCmpInst::FCMP_UNE, FloatExpV, FloatExpMask);
+    return CGF.Builder.CreateZExt(ExpCmp, IntTy);
+  }
+  case Colossus::BI__builtin_ipu_isinf_f32:
+  case Colossus::BI__builtin_ipu_isinf_v2f16:
+  case Colossus::BI__builtin_ipu_isinf_v2f32:
+  case Colossus::BI__builtin_ipu_isinf_v4f16:
+  case Colossus::BI__builtin_ipu_isnan_f32:
+  case Colossus::BI__builtin_ipu_isnan_v2f16:
+  case Colossus::BI__builtin_ipu_isnan_v2f32:
+  case Colossus::BI__builtin_ipu_isnan_v4f16: {
+    // Extract mantissa and check if null.
+    Value *ExpCmp =
+        CGF.Builder.CreateFCmpS(FCmpInst::FCMP_OEQ, FloatExpV, FloatExpMask);
+    APFloat NegInf = APFloat::getInf(Semantics, /*Negative=*/true);
+    APInt MantissaMask = NegInf.bitcastToAPInt();
+    MantissaMask.flipAllBits();
+    Value *MantissaMaskV = ConstantInt::get(IntTy, MantissaMask);
+    Value *MantissaV = CGF.Builder.CreateAnd(IntV, MantissaMaskV);
+    Value *MantissaCmp;
+    // Use integer comparison to check whether significand is null because
+    // a significand only bit pattern is a subnormal value and those values are
+    // flushed to zero by IPU for 32-bit values.
+    if (Ty->getScalarSizeInBits() == 32) {
+      Value *Zero = ConstantInt::get(IntTy, 0);
+      switch (BuiltinID) {
+      case Colossus::BI__builtin_ipu_isinf_f32:
+      case Colossus::BI__builtin_ipu_isinf_v2f32:
+        MantissaCmp = CGF.Builder.CreateICmpEQ(MantissaV, Zero);
+        break;
+      case Colossus::BI__builtin_ipu_isnan_f32:
+      case Colossus::BI__builtin_ipu_isnan_v2f32:
+        MantissaCmp = CGF.Builder.CreateICmpNE(MantissaV, Zero);
+        break;
+      }
+    } else {
+      Value *FloatMantissaV = CGF.Builder.CreateBitCast(MantissaV, Ty);
+      Value *FloatZero = ConstantFP::get(Ty, APFloat::getZero(Semantics));
+      switch (BuiltinID) {
+      case Colossus::BI__builtin_ipu_isinf_v2f16:
+      case Colossus::BI__builtin_ipu_isinf_v4f16:
+        MantissaCmp = CGF.Builder.CreateFCmpS(FCmpInst::FCMP_OEQ,
+                                              FloatMantissaV, FloatZero);
+        break;
+      case Colossus::BI__builtin_ipu_isnan_v2f16:
+      case Colossus::BI__builtin_ipu_isnan_v4f16:
+        MantissaCmp = CGF.Builder.CreateFCmpS(FCmpInst::FCMP_UNE,
+                                              FloatMantissaV, FloatZero);
+        break;
+      }
+    }
+    Value *Cmp = CGF.Builder.CreateAnd(ExpCmp, MantissaCmp);
+    return CGF.Builder.CreateZExt(Cmp, IntTy);
+  }
+  }
+  return nullptr;
+}
+
+static Value *EmitColossusBuiltinExprWithImmCheck(CodeGenFunction &CGF,
+                                                  unsigned BuiltinID,
+                                                  const CallExpr *E) {
+  struct IntrinsicEntry {
+      unsigned Builtin;
+      unsigned Name;
+      unsigned NumArgs;
+      unsigned ImmPos;
+      unsigned ImmBitLength;
+  };
+  // clang-format off
+  static const std::array<IntrinsicEntry, 9> IntrinsicsTable = {{
+  //| BuiltinID                           | Intrinsic Name               | NumArgs | ImmPos | BitLength |
+      {Colossus::BI__builtin_ipu_put,       Intrinsic::colossus_put,       2,        1,       8,        },
+      {Colossus::BI__builtin_ipu_uput,      Intrinsic::colossus_uput,      2,        1,       8,        },
+      {Colossus::BI__builtin_ipu_uputf,     Intrinsic::colossus_uputf,     2,        1,       8,        },
+      {Colossus::BI__builtin_ipu_get,       Intrinsic::colossus_get,       1,        0,       8,        },
+      {Colossus::BI__builtin_ipu_uget,      Intrinsic::colossus_uget,      1,        0,       8,        },
+      {Colossus::BI__builtin_ipu_ugetf,     Intrinsic::colossus_ugetf,     1,        0,       8,        },
+      {Colossus::BI__builtin_ipu_f32v2aop,  Intrinsic::colossus_f32v2aop,  3,        2,       8,        },
+      {Colossus::BI__builtin_ipu_f16v2gina, Intrinsic::colossus_f16v2gina, 2,        1,       12,       },
+      {Colossus::BI__builtin_ipu_f32v2gina, Intrinsic::colossus_f32v2gina, 2,        1,       12,       },
+  }};
+  // clang-format on
+
+  IntrinsicEntry Intrinsic = [&]() {
+    for (IntrinsicEntry Intr : IntrinsicsTable) {
+      if (BuiltinID == Intr.Builtin)
+        return Intr;
+      }
+      llvm_unreachable("unhandled builtin");
+  }();
+
+  CodeGen::CGBuilderTy &Builder = CGF.Builder;
+  CodeGen::CodeGenModule &CGM = CGF.CGM;
+
+  const Expr *Imm = E->getArg(Intrinsic.ImmPos);
+  Expr::EvalResult Result;
+  if (!Imm->EvaluateAsInt(Result, CGM.getContext())) {
+    CGM.Error(Imm->getExprLoc(), "Immediate argument must be a constant.");
+    return nullptr;
+  }
+  if (Result.Val.getInt() >= (1 << Intrinsic.ImmBitLength)) {
+    std::string ErrorMsg = std::string("Immediate argument must be a ") +
+                           std::string("constant unsigned integer < ") +
+                           std::to_string(1 << Intrinsic.ImmBitLength) + ".";
+    CGM.Error(Imm->getExprLoc(), StringRef(ErrorMsg));
+    return nullptr;
+  }
+
+  llvm::Value *ZeroExtImm = Builder.CreateZExt(CGF.EmitScalarExpr(Imm),
+                                                   CGF.Int32Ty);
+  llvm::Function *F = CGM.getIntrinsic(Intrinsic.Name, CGF.Int32Ty);
+
+  std::vector<llvm::Value *> Args;
+  for (unsigned i = 0; i < Intrinsic.NumArgs; ++i) {
+    if (i == Intrinsic.ImmPos)
+      Args.push_back(ZeroExtImm);
+    else
+      Args.push_back(CGF.EmitScalarExpr(E->getArg(i)));
+  }
+
+  return Builder.CreateCall(F, makeArrayRef(Args));
+}
+
+Value *CodeGenFunction::EmitColossusBuiltinExpr(unsigned BuiltinID,
+                                                const CallExpr *E) {
+  switch (BuiltinID) {
+  case Colossus::BI__builtin_ipu_put:
+  case Colossus::BI__builtin_ipu_uput:
+  case Colossus::BI__builtin_ipu_uputf:
+  case Colossus::BI__builtin_ipu_get:
+  case Colossus::BI__builtin_ipu_uget:
+  case Colossus::BI__builtin_ipu_ugetf:
+  case Colossus::BI__builtin_ipu_f32v2aop:
+  case Colossus::BI__builtin_ipu_f16v2gina:
+  case Colossus::BI__builtin_ipu_f32v2gina:
+    return EmitColossusBuiltinExprWithImmCheck(*this, BuiltinID, E);
+  case Colossus::BI__builtin_ipu_isfinite_f32:
+  case Colossus::BI__builtin_ipu_isfinite_v2f16:
+  case Colossus::BI__builtin_ipu_isfinite_v2f32:
+  case Colossus::BI__builtin_ipu_isfinite_v4f16:
+  case Colossus::BI__builtin_ipu_isinf_f32:
+  case Colossus::BI__builtin_ipu_isinf_v2f16:
+  case Colossus::BI__builtin_ipu_isinf_v2f32:
+  case Colossus::BI__builtin_ipu_isinf_v4f16:
+  case Colossus::BI__builtin_ipu_isnan_f32:
+  case Colossus::BI__builtin_ipu_isnan_v2f16:
+  case Colossus::BI__builtin_ipu_isnan_v2f32:
+  case Colossus::BI__builtin_ipu_isnan_v4f16:
+    return EmitColossusFPTestBuiltinExpr(*this, BuiltinID, E);
+  default:
+    return nullptr;
+  }
+}
+// IPU local patch end

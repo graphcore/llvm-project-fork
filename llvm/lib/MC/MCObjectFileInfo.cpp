@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #include "llvm/MC/MCObjectFileInfo.h"
@@ -332,6 +334,11 @@ void MCObjectFileInfo::initMachOMCObjectFileInfo(const Triple &T) {
 
 void MCObjectFileInfo::initELFMCObjectFileInfo(const Triple &T, bool Large) {
   switch (T.getArch()) {
+  // IPU local patch begin
+  case Triple::colossus:
+    FDECFIEncoding = dwarf::DW_EH_PE_absptr;
+    break;
+  // IPU local patch end
   case Triple::mips:
   case Triple::mipsel:
   case Triple::mips64:

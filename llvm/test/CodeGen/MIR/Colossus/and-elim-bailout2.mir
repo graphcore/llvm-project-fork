@@ -1,0 +1,37 @@
+# RUN: llc -march=colossus -run-pass=colossus-and-elim -x=mir -o - < %s | FileCheck %s
+
+# AND_ZI cannot be removed because removal would mean the implicit $m0 uses need
+# to be transformed into implicit $m4 which is not possible.
+
+# CHECK: $m4 = LDZ8 killed $m0, $mzero, $m3, 0
+# CHECK: $m0 = AND_ZI $m4, 255, 0
+# CHECK: CALL_PSEUDO &__st8, cc_save, implicit-def dead $lr, implicit $m0, implicit $m1, implicit-def $sp
+# CHECK: $m0 = AND_ZI $m4, 255, 0
+# CHECK: CALL_PSEUDO &__st8, cc_save, implicit-def dead $lr, implicit $m0, implicit $m1, implicit-def $sp
+
+
+---
+name:            foo
+alignment:       4
+tracksRegLiveness: false
+machineFunctionInfo: {}
+body:             |
+  bb.0.entry:
+    $m4 = LDZ8 killed $m0, $mzero, $m3, 0
+    BRNZ killed $m3, %bb.1, 0
+    BR %bb.2, 0
+  
+  bb.1:
+    $m0 = AND_ZI $m4, 255, 0
+    CALL_PSEUDO &__st8, cc_save, implicit-def dead $lr, implicit $m0, implicit $m1, implicit-def $sp
+    BR %bb.3, 0
+  
+  bb.2:
+    $m0 = AND_ZI $m4, 255, 0
+    CALL_PSEUDO &__st8, cc_save, implicit-def dead $lr, implicit $m0, implicit $m1, implicit-def $sp
+  
+  bb.3:
+    RTN_PSEUDO
+    RTN_REG_HOLDER
+
+...

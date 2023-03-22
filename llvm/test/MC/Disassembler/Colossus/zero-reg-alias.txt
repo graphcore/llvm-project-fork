@@ -1,0 +1,11 @@
+# RUN: llvm-mc -triple colossus-graphcore-elf -disassemble< %s 1>%t.out
+# RUN: FileCheck < %t.out %s
+
+# CHECK: setzi $a15, 0
+0x00,0x00,0xf0,0x1a
+
+# CHECK: setzi $m15, 0
+0x00,0x00,0xf0,0x19
+
+# CHECK: f32v2add $a0:1, $a14:15, $a14:15
+0x03, 0xe0, 0xe0, 0x58

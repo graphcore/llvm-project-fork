@@ -1,6 +1,11 @@
+// This file has been modified by Graphcore Ltd.
 // Check that SDKROOT does not infer simulator on when it points to a regular
 // SDK.
 // REQUIRES: system-darwin && native
+// IPU local patch begin
+// we only build for the host and IPU
+// XFAIL: graphcore
+// IPU local patch end
 //
 // RUN: rm -rf %t/SDKs/iPhoneOS8.0.0.sdk
 // RUN: mkdir -p %t/SDKs/iPhoneOS8.0.0.sdk

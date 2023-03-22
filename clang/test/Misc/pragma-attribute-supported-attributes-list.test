@@ -1,3 +1,4 @@
+// This file has been modified by Graphcore Ltd.
 // RUN: clang-tblgen -gen-clang-test-pragma-attribute-supported-attributes -I%src_include_dir %src_include_dir/clang/Basic/Attr.td -o - | FileCheck %s
 
 // The number of supported attributes should never go down!
@@ -47,6 +48,9 @@
 // CHECK-NEXT: Cleanup (SubjectMatchRule_variable_is_local)
 // CHECK-NEXT: CmseNSEntry (SubjectMatchRule_function)
 // CHECK-NEXT: Cold (SubjectMatchRule_function)
+// IPU local patch begin
+// CHECK-NEXT: ColossusVertex (SubjectMatchRule_hasType_functionType)
+// IPU local patch end
 // CHECK-NEXT: Common (SubjectMatchRule_variable)
 // CHECK-NEXT: ConstInit (SubjectMatchRule_variable_is_global)
 // CHECK-NEXT: Constructor (SubjectMatchRule_function)
@@ -150,6 +154,9 @@
 // CHECK-NEXT: PassObjectSize (SubjectMatchRule_variable_is_parameter)
 // CHECK-NEXT: PatchableFunctionEntry (SubjectMatchRule_function, SubjectMatchRule_objc_method)
 // CHECK-NEXT: Pointer (SubjectMatchRule_record_not_is_union)
+// IPU local patch begin
+// CHECK-NEXT: PoplarConstraint (SubjectMatchRule_record_not_is_union, SubjectMatchRule_function)
+// IPU local patch end
 // CHECK-NEXT: RandomizeLayout (SubjectMatchRule_record)
 // CHECK-NEXT: ReleaseHandle (SubjectMatchRule_variable_is_parameter)
 // CHECK-NEXT: RenderScriptKernel (SubjectMatchRule_function)

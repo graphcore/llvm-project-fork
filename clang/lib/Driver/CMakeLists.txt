@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 set(LLVM_LINK_COMPONENTS
   BinaryFormat
   MC
@@ -11,6 +12,16 @@ if(WIN32)
   # MSVCToolChain.cpp uses version.dll.
   set(system_libs version)
 endif()
+
+# IPU local patch begin
+message(STATUS "ENABLED_IPU_ARCH_NAMES: ${ENABLED_IPU_ARCH_NAMES}")
+if("ipu2" IN_LIST ENABLED_IPU_ARCH_NAMES)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIPU2S")
+  endif()
+if("ipu21" IN_LIST ENABLED_IPU_ARCH_NAMES)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIPU21 -DIPU21PLUS")
+endif()
+# IPU local patch end
 
 add_clang_library(clangDriver
   Action.cpp
@@ -44,6 +55,9 @@ add_clang_library(clangDriver
   ToolChains/BareMetal.cpp
   ToolChains/Clang.cpp
   ToolChains/CloudABI.cpp
+# IPU local patch begin
+  ToolChains/Colossus.cpp
+# IPU local patch end
   ToolChains/CommonArgs.cpp
   ToolChains/Contiki.cpp
   ToolChains/CrossWindows.cpp

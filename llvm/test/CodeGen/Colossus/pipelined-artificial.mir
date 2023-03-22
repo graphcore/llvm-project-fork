@@ -1,0 +1,78 @@
+# RUN: llc -march=colossus -verify-machineinstrs -run-pass=pipeliner \
+# RUN:   -enable-pipeliner -o - %s | FileCheck %s
+
+# Check that no assert is tripped in generatePhis() in ModuloSchedule.cpp due
+# to some instruction not being schedule. This used to happen because
+# computePath() in MachinePipeliner.cpp followed artificial dependencies but
+# not computeNodeOrder() which calls ignoreDependence().
+
+# CHECK:     bb.1:
+# CHECK-NEXT:  successors: %bb.1(0x[[#%X,]]), %bb.2(0x[[#%X,]])
+# CHECK-NEXT:  {{ +}}
+# CHECK-NEXT:  %16:arpair = PHI %8, %bb.0, %17, %bb.1
+# CHECK-NEXT:  %18:arpair = PHI %6, %bb.0, %19, %bb.1
+# CHECK-NEXT:  %20:mr = PHI %11, %bb.0, %21, %bb.1
+# CHECK-NEXT:  %22:mr = PHI %5, %bb.0, %23, %bb.1
+# CHECK-NEXT:  %24:mr = PHI %7, %bb.0, %25, %bb.1
+# CHECK-NEXT:  %26:mr = PHI %15, %bb.0, %27, %bb.1
+# CHECK-NEXT:  %28:arpair = F32V2MAX %18, %16, 0
+# CHECK-NEXT:  %29:mr, %30:arpair = LD64STEP_SI_A $mzero, %22, 1, 0 :: (load (s64))
+# CHECK-NEXT:  %19:arpair = COPY %30
+# CHECK-NEXT:  %23:mr = COPY %29
+# CHECK-NEXT:  %31:mr, %17:arpair = LD64STEP_SI_A $mzero, %24, 1, 0 :: (load (s64))
+# CHECK-NEXT:  %25:mr = COPY %31
+# CHECK-NEXT:  %21:mr = ST64STEP_SI_A $mzero, %20, 1, %28, 0 :: (store (s64))
+# CHECK-NEXT:  %27:mr = CLOOP_END_VALUE %26, 1
+# CHECK-NEXT:  CLOOP_END_BRANCH %27, %bb.1, 1
+# CHECK-NEXT:  BR %bb.2, 0
+
+---
+name:            pipeline_artificial
+tracksRegLiveness: true
+body:             |
+  bb.0:
+    liveins: $m0
+    %0:mr = COPY $m0
+    %1:mr = LD32_ZI %0, $mzero, 0, 0 :: (dereferenceable load (s32))
+    %2:mr = LD32 killed %1, $mzero, $mzero, 0 :: (load (s32))
+    %3:mr = LD32_ZI %0, $mzero, 1, 0 :: (dereferenceable load (s32))
+    %4:mr = LD32 killed %3, $mzero, $mzero, 0 :: (load (s32))
+    %5:mr, %6:arpair = LD64STEP_SI_A $mzero, %2, 1, 0 :: (load (s64))
+    %7:mr, %8:arpair = LD64STEP_SI_A $mzero, %4, 1, 0 :: (load (s64))
+    %9:mr = LD32_ZI %0, $mzero, 2, 0 :: (dereferenceable load (s32))
+    %10:mr = LD32_ZI %9, $mzero, 1, 0 :: (load (s32))
+    %11:mr = LD32_ZI %9, $mzero, 0, 0 :: (load (s32))
+    %12:mr = SHR_ZI %10, 1, 0
+    %13:mr = ADD_SI killed %12, -1, 0
+    %14:mr = AND_ZI killed %13, 4095, 0
+    %15:mr = CLOOP_BEGIN_VALUE %14, 1
+    CLOOP_BEGIN_TERMINATOR %15, 0
+    BR %bb.1, 0
+
+  bb.1:
+    successors: %bb.1, %bb.2
+
+    %16:arpair = PHI %8, %bb.0, %28, %bb.1
+    %17:arpair = PHI %6, %bb.0, %25, %bb.1
+    %18:mr = PHI %11, %bb.0, %30, %bb.1
+    %19:mr = PHI %5, %bb.0, %26, %bb.1
+    %20:mr = PHI %7, %bb.0, %29, %bb.1
+    %21:mr = PHI %15, %bb.0, %31, %bb.1
+    %22:arpair = F32V2MAX %17, %16, 0
+    %23:mr, %24:arpair = LD64STEP_SI_A $mzero, %19, 1, 0 :: (load (s64))
+    %25:arpair = COPY %24
+    %26:mr = COPY %23
+    %27:mr, %28:arpair = LD64STEP_SI_A $mzero, %20, 1, 0 :: (load (s64))
+    %29:mr = COPY %27
+    %30:mr = ST64STEP_SI_A $mzero, %18, 1, killed %22, 0 :: (store (s64))
+    %31:mr = CLOOP_END_VALUE %21, 1
+    CLOOP_END_BRANCH %31, %bb.1, 1
+    BR %bb.2, 0
+
+  bb.2:
+    %32:mr = SETZI 1, 0
+    $m0 = COPY %32
+    RTN_PSEUDO
+    RTN_REG_HOLDER implicit $m0
+
+...

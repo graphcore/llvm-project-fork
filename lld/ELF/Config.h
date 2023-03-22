@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #ifndef LLD_ELF_CONFIG_H
@@ -188,6 +190,9 @@ struct Configuration {
   bool hasDynSymTab;
   bool ignoreDataAddressEquality;
   bool ignoreFunctionAddressEquality;
+  // IPU Local patch begin
+  bool ignoreRelocations;
+  // IPU Local patch end
   bool ltoCSProfileGenerate;
   bool ltoPGOWarnMismatch;
   bool ltoDebugPassManager;

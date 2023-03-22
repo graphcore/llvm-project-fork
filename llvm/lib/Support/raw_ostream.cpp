@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This implements support for bulk buffered stream output.
@@ -939,6 +941,11 @@ bool raw_fd_stream::classof(const raw_ostream *OS) {
 void raw_string_ostream::write_impl(const char *Ptr, size_t Size) {
   OS.append(Ptr, Size);
 }
+
+// IPU local patch begin
+// Workaround for https://bugs.gentoo.org/704252
+uint64_t raw_string_ostream::current_pos() const { return OS.size(); }
+// IPU local patch end
 
 //===----------------------------------------------------------------------===//
 //  raw_svector_ostream

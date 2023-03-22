@@ -1,0 +1,45 @@
+{
+  "linters": {
+    "chmod": {
+      "type": "chmod",
+      "include": "(^lib/Target/Colossus)"
+    },
+    "merge-conflict": {
+      "type": "merge-conflict",
+      "include": "(^lib/Target/Colossus)"
+    },
+    "text": {
+      "type": "text",
+      "include": "(^lib/Target/Colossus)",
+      "exclude": "(\\.(c|cpp|C|cc|c\\+\\+|cxx|h|hpp|py)$)",
+      "severity": {
+        "1": "autofix",
+        "2": "disabled",
+        "3": "disabled",
+        "4": "autofix",
+        "5": "error",
+        "6": "disabled",
+        "7": "disabled",
+        "8": "autofix"
+      }
+    },
+    "text-cxx": {
+      "type": "text",
+      "include": "(^lib/Target/Colossus.*\\.(c|cpp|C|cc|c\\+\\+|cxx|h|hpp)$)",
+      "severity": {
+        "1": "autofix",
+        "2": "warning",
+        "3": "warning",
+        "4": "autofix",
+        "5": "error",
+        "6": "autofix",
+        "7": "autofix",
+        "8": "autofix"
+      }
+    },
+    "spelling": {
+      "type": "spelling",
+      "include": "(^lib/Target/Colossus)"
+    }
+  }
+}

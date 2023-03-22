@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 include(CMakePushCheckState)
 include(CheckSymbolExists)
 
@@ -144,6 +145,10 @@ macro(test_target_arch arch def)
     message(FATAL_ERROR "Cannot compile for ${arch}:\n${TARGET_${arch}_OUTPUT}")
   endif()
 endmacro()
+
+# IPU local patch begin
+add_default_target_arch(ipu)
+# IPU local patch end
 
 macro(detect_target_arch)
   check_symbol_exists(__arm__ "" __ARM)

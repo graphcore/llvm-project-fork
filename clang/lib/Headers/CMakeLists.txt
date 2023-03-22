@@ -1,3 +1,5 @@
+# This file has been modified by Graphcore Ltd.
+
 # core_files list contains the headers shared by all platforms.
 # Please consider adding new platform specific headers
 # to platform specific lists below.
@@ -156,6 +158,10 @@ set(x86_files
   ia32intrin.h
   immintrin.h
   invpcidintrin.h
+  # IPU local patch begin
+  ipu_builtins.h
+  ipudef.h
+  # IPU local patch end
   keylockerintrin.h
   lwpintrin.h
   lzcntintrin.h

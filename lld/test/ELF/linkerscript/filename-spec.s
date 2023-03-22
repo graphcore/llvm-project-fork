@@ -1,3 +1,7 @@
+# This file has been modified by Graphcore Ltd.
+# IPU local patch begin
+# UNSUPPORTED: true
+# IPU local patch end
 # REQUIRES: x86
 # RUN: rm -rf %t && split-file %s %t
 # RUN: cd %t && mkdir dir0 dir1 dir2

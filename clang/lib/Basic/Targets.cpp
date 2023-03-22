@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This file implements construction of a TargetInfo object from a
@@ -19,6 +21,9 @@
 #include "Targets/ARM.h"
 #include "Targets/AVR.h"
 #include "Targets/BPF.h"
+// IPU local patch begin
+#include "Targets/Colossus.h"
+// IPU local patch end
 #include "Targets/CSKY.h"
 #include "Targets/DirectX.h"
 #include "Targets/Hexagon.h"
@@ -240,6 +245,11 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
   case llvm::Triple::bpfeb:
   case llvm::Triple::bpfel:
     return new BPFTargetInfo(Triple, Opts);
+
+    // IPU local patch begin
+  case llvm::Triple::colossus:
+    return new ColossusTargetInfo(Triple, Opts);
+    // IPU local patch end
 
   case llvm::Triple::msp430:
     return new MSP430TargetInfo(Triple, Opts);

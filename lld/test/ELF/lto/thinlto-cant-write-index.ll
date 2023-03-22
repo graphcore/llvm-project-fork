@@ -1,4 +1,8 @@
+; This file has been modified by Graphcore Ltd.
 ; REQUIRES: x86
+; IPU local patch begin
+; UNSUPPORTED: true
+; IPU local patch end
 
 ; Basic ThinLTO tests.
 ; RUN: opt -module-summary %s -o %t1.o

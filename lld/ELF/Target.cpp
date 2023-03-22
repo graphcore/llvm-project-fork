@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // Machine-specific things, such as applying relocations, creation of
@@ -87,6 +89,10 @@ TargetInfo *elf::getTarget() {
     return getSPARCV9TargetInfo();
   case EM_X86_64:
     return getX86_64TargetInfo();
+// IPU local patch begin
+  case EM_GRAPHCORE_IPU:
+    return getColossusTargetInfo();
+// IPU local patch end
   }
   llvm_unreachable("unknown target machine");
 }

@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_MC_MCPARSER_MCTARGETASMPARSER_H
@@ -485,6 +487,9 @@ public:
   virtual void doBeforeLabelEmit(MCSymbol *Symbol) {}
   
   virtual void onLabelParsed(MCSymbol *Symbol) {}
+  // IPU local patch begin
+  virtual void onStatementPrefix(AsmToken Token) {}
+  // IPU local patch end
 
   /// Ensure that all previously parsed instructions have been emitted to the
   /// output streamer, if the target does not emit them immediately.
