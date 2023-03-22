@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #include "Clang.h"
@@ -19,6 +21,9 @@
 #include "Arch/SystemZ.h"
 #include "Arch/VE.h"
 #include "Arch/X86.h"
+// IPU local patch begin
+#include "Colossus.h"
+// IPU local patch end
 #include "CommonArgs.h"
 #include "Hexagon.h"
 #include "MSP430.h"
@@ -397,6 +402,11 @@ static void getTargetFeatures(const Driver &D, const llvm::Triple &Triple,
   case llvm::Triple::csky:
     csky::getCSKYTargetFeatures(D, Triple, Args, CmdArgs, Features);
     break;
+// IPU local patch begin
+  case llvm::Triple::colossus:
+    colossus::getColossusTargetFeatures(D, Args, Features);
+    break;
+// IPU local patch end
   }
 
   for (auto Feature : unifyTargetFeatures(Features)) {
@@ -468,9 +478,12 @@ static bool addExceptionArgs(const ArgList &Args, types::ID InputType,
   }
 
   if (types::isCXX(InputType)) {
+    // IPU local patch begin
     // Disable C++ EH by default on XCore and PS4/PS5.
     bool CXXExceptionsEnabled = Triple.getArch() != llvm::Triple::xcore &&
+                                Triple.getArch() != llvm::Triple::colossus &&
                                 !Triple.isPS() && !Triple.isDriverKit();
+    // IPU local patch end
     Arg *ExceptionArg = Args.getLastArg(
         options::OPT_fcxx_exceptions, options::OPT_fno_cxx_exceptions,
         options::OPT_fexceptions, options::OPT_fno_exceptions);
@@ -550,6 +563,9 @@ static bool useFramePointerForTargetByDefault(const ArgList &Args,
   case llvm::Triple::wasm32:
   case llvm::Triple::wasm64:
   case llvm::Triple::msp430:
+    // IPU local patch begin
+  case llvm::Triple::colossus:
+    // IPU local patch end
     // XCore never wants frame pointers, regardless of OS.
     // WebAssembly never wants frame pointers.
     return false;
@@ -1849,7 +1865,14 @@ void Clang::RenderTargetOptions(const llvm::Triple &EffectiveTriple,
   case llvm::Triple::ve:
     AddVETargetArgs(Args, CmdArgs);
     break;
+
+// IPU local patch begin
+  case llvm::Triple::colossus:
+    AddColossusTargetArgs(Args, CmdArgs);
+    break;
+// IPU local patch end
   }
+
 }
 
 namespace {
@@ -2392,6 +2415,46 @@ void Clang::AddVETargetArgs(const ArgList &Args, ArgStringList &CmdArgs) const {
   CmdArgs.push_back("-mfloat-abi");
   CmdArgs.push_back("hard");
 }
+
+// IPU local patch begin
+void Clang::AddColossusTargetArgs(const ArgList &Args,
+                                  ArgStringList &CmdArgs) const {
+  CmdArgs.push_back("-D__IPU__");
+  auto ipuArchDefine = "-D__IPU_ARCH_VERSION__=1";
+  auto ipuRptSizeDefine = "-D__IPU_REPEAT_COUNT_SIZE__=12";
+  if (const Arg *A = Args.getLastArg(options::OPT_march_EQ)) {
+    StringRef MArch = A->getValue();
+    if (MArch == "ipu1") {
+      ipuArchDefine = "-D__IPU_ARCH_VERSION__=1";
+      ipuRptSizeDefine = "-D__IPU_REPEAT_COUNT_SIZE__=12";
+    } else if (MArch == "ipu2") {
+      ipuArchDefine = "-D__IPU_ARCH_VERSION__=2";
+      ipuRptSizeDefine = "-D__IPU_REPEAT_COUNT_SIZE__=16";
+#ifdef IPU21
+    } else if (MArch == "ipu21") {
+      ipuArchDefine = "-D__IPU_ARCH_VERSION__=21";
+      ipuRptSizeDefine = "-D__IPU_REPEAT_COUNT_SIZE__=16";
+#endif
+    } else {
+      const Driver &D = getToolChain().getDriver();
+      const llvm::Triple &Triple = getToolChain().getEffectiveTriple();
+      const std::string &TripleStr = Triple.getTriple();
+      D.Diag(diag::err_target_unsupported_arch) << MArch
+                                                << TripleStr;
+    }
+  }
+
+  CmdArgs.push_back(ipuArchDefine);
+  CmdArgs.push_back(ipuRptSizeDefine);
+
+  if (Args.hasArg(options::OPT_msupervisor)) {
+    CmdArgs.push_back("-D__SUPERVISOR__");
+  } else {
+    CmdArgs.push_back("-fnative-half-type");
+    CmdArgs.push_back("-fallow-half-arguments-and-returns");
+  }
+}
+// IPU local patch end
 
 void Clang::DumpCompilationDatabase(Compilation &C, StringRef Filename,
                                     StringRef Target, const InputInfo &Output,

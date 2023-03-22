@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 # CMake build for CompilerRT.
 #
 # An important constraint of the build is that it only produces libraries
@@ -117,6 +118,15 @@ if ("${COMPILER_RT_DEFAULT_TARGET_TRIPLE}" MATCHES ".*android.*")
   set(ANDROID_API_LEVEL ${CMAKE_MATCH_2})
 endif()
 pythonize_bool(ANDROID)
+# IPU local patch begin
+if (${COMPILER_RT_NO_OS_DIR})
+  set(COMPILER_RT_LIBRARY_OUTPUT_DIR
+    ${COMPILER_RT_OUTPUT_DIR}/lib)
+  set(COMPILER_RT_LIBRARY_INSTALL_DIR
+    ${COMPILER_RT_INSTALL_PATH}/lib)
+else()
+endif()
+# IPU local patch end
 
 set(COMPILER_RT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(COMPILER_RT_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})

@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 ///
 /// \file
@@ -305,6 +307,18 @@ namespace clang {
         LastTSBuiltin
     };
   }
+
+  // IPU local patch begin
+  /// Colossus builtins
+  namespace Colossus {
+    enum {
+        LastTIBuiltin = clang::Builtin::FirstTSBuiltin-1,
+#define BUILTIN(ID, TYPE, ATTRS) BI##ID,
+#include "clang/Basic/BuiltinsColossus.def"
+        LastTSBuiltin
+    };
+  }
+  // IPU local patch end
 
   /// XCore builtins
   namespace XCore {

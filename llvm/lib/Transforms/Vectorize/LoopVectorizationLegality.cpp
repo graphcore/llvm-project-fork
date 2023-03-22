@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This file provides loop vectorization legality analysis. Original code
@@ -684,6 +686,14 @@ bool LoopVectorizationLegality::canVectorizeInstrs() {
           // recurrences.
           AllowedExit.insert(&I);
           continue;
+// IPU local patch begin
+          // IPU TODO
+          reportVectorizationFailure(
+              "Found value that is neither a induction nor reduction value",
+              "value could not be identified as an induction or reduction varaible",
+              "NeitherInductionNorReduction", ORE, TheLoop, Phi);
+          return false;
+// IPU local patch end
         }
 
         // We only allow if-converted PHIs with exactly two incoming values.

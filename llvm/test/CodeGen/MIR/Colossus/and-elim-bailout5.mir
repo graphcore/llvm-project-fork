@@ -1,0 +1,30 @@
+# RUN: llc -march=colossus -run-pass=colossus-and-elim -x=mir -o - < %s | FileCheck %s
+
+# Update uses of the result register of the AND with immediate 255 before in
+# the same basic block.
+
+# CHECK: $m1 = LDZ8_ZI $m0, $mzero, 0, 0
+# CHECK-NOT: ADD_ZI {{(killed)?}} $m0, 1, 0
+# CHECK: $m3 = CMPEQ_ZI $m1, 42, 0
+
+---
+name:            foo
+tracksRegLiveness: false
+machineFunctionInfo: {}
+body:             |
+  bb.0.entry:
+    $m1 = LDZ8_ZI $m0, $mzero, 0, 0
+    BR %bb.1, 0
+
+  bb.1:
+    $m2 = ADD_ZI killed $m0, 1, 0
+    $m0 = AND_ZI $m1, 255, 0
+    $m3 = CMPEQ_ZI $m0, 42, 0
+    BRNZ $m3, %bb.1, 0
+    BR %bb.2, 0
+
+  bb.2:
+    $m0 = ADD_ZI killed $m0, 1, 0
+    RTN $lr, 0
+
+...

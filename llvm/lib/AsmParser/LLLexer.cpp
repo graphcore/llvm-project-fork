@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // Implement the Lexer for .ll files.
@@ -629,6 +631,9 @@ lltok::Kind LLLexer::LexIdentifier() {
   KEYWORD(amdgpu_cs);
   KEYWORD(amdgpu_kernel);
   KEYWORD(amdgpu_gfx);
+  // IPU local patch begin
+  KEYWORD(colossus_vertex);
+  // IPU local patch end
   KEYWORD(tailcc);
 
   KEYWORD(cc);

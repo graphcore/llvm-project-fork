@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This file describes the target machine instruction set to the code generator.
@@ -1812,6 +1814,12 @@ public:
     // behavior.
     return 5;
   }
+
+  // IPU local patch begin
+  /// Some (target specific pseudo) instructions may not be CSE'd. This hook
+  /// can be used to avoid CSE candidate considerations for MachineInstrs.
+  virtual bool canBeCSECandidate(const MachineInstr &MI) const { return true; }
+  // IPU local patch end
 
   /// Return the maximal number of alias checks on memory operands. For
   /// instructions with more than one memory operands, the alias check on a

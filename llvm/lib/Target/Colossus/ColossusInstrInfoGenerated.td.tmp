@@ -1,0 +1,3 @@
+include "ColossusInstrInfoCommonGenerated.td"
+include "ColossusInstrInfoSupervisorGenerated.td"
+include "ColossusInstrInfoWorkerGenerated.td"

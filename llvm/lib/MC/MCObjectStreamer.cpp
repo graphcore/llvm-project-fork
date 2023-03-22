@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #include "llvm/MC/MCObjectStreamer.h"
@@ -435,6 +437,10 @@ void MCObjectStreamer::emitInstructionImpl(const MCInst &Inst,
   MCAssembler &Assembler = getAssembler();
   MCAsmBackend &Backend = Assembler.getBackend();
   if (!(Backend.mayNeedRelaxation(Inst, STI) ||
+  // IPU local patch begin
+  // T793
+        Backend.needsRelaxableFragment(Inst) ||
+  // IPU local patch end
         Backend.allowEnhancedRelaxation())) {
     emitInstToData(Inst, STI);
     return;

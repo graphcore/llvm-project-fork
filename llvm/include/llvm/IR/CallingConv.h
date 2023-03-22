@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This file defines LLVM's set of calling conventions.
@@ -251,6 +253,11 @@ namespace CallingConv {
 
     /// M68k_INTR - Calling convention used for M68k interrupt routines.
     M68k_INTR = 101,
+
+    /// IPU local patch begin
+    /// \brief The CC used for vertex functions on Colossus devices.
+    Colossus_Vertex = 102,
+    /// IPU local patch end
 
     /// The highest possible calling convention ID. Must be some 2^k - 1.
     MaxID = 1023

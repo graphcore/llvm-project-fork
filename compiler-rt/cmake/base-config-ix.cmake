@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 # The CompilerRT build system requires CMake version 2.8.8 or higher in order
 # to use its support for building convenience "libraries" as a collection of
 # .o files. This is particularly useful in producing larger, more complex
@@ -250,6 +251,10 @@ macro(test_targets)
       test_target_arch(wasm64 "" "--target=wasm64-unknown-unknown")
     elseif("${COMPILER_RT_DEFAULT_TARGET_ARCH}" MATCHES "ve")
       test_target_arch(ve "__ve__" "--target=ve-unknown-none")
+# IPU local patch begin
+    elseif("${COMPILER_RT_DEFAULT_TARGET_ARCH}" MATCHES "ipu")
+      list(APPEND COMPILER_RT_SUPPORTED_ARCH ipu)
+# IPU local patch end
     endif()
     set(COMPILER_RT_OS_SUFFIX "")
   endif()

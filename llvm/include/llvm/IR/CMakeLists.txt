@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 set(LLVM_TARGET_DEFINITIONS Attributes.td)
 tablegen(LLVM Attributes.inc -gen-attrs)
 
@@ -8,6 +9,9 @@ tablegen(LLVM IntrinsicsAArch64.h -gen-intrinsic-enums -intrinsic-prefix=aarch64
 tablegen(LLVM IntrinsicsAMDGPU.h -gen-intrinsic-enums -intrinsic-prefix=amdgcn)
 tablegen(LLVM IntrinsicsARM.h -gen-intrinsic-enums -intrinsic-prefix=arm)
 tablegen(LLVM IntrinsicsBPF.h -gen-intrinsic-enums -intrinsic-prefix=bpf)
+# IPU local patch begin
+tablegen(LLVM IntrinsicsColossus.h -gen-intrinsic-enums -intrinsic-prefix=colossus)
+# IPU local patch end
 tablegen(LLVM IntrinsicsHexagon.h -gen-intrinsic-enums -intrinsic-prefix=hexagon)
 tablegen(LLVM IntrinsicsMips.h -gen-intrinsic-enums -intrinsic-prefix=mips)
 tablegen(LLVM IntrinsicsNVPTX.h -gen-intrinsic-enums -intrinsic-prefix=nvvm)

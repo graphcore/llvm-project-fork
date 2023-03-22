@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #include "int_lib.h"
@@ -88,6 +90,13 @@ void __clear_cache(void *start, void *end) {
                    : "=r"(start_reg)
                    : "r"(syscall_nr), "r"(start_reg), "r"(end_reg), "r"(flags));
   assert(start_reg == 0 && "Cache flush syscall failed.");
+// IPU local patch begin
+  if (start_reg != 0) {
+      compilerrt_abort();
+  }
+#elif defined(_WIN32)
+  FlushInstructionCache(GetCurrentProcess(), start, end - start);
+// IPU local patch end
 #else
   compilerrt_abort();
 #endif

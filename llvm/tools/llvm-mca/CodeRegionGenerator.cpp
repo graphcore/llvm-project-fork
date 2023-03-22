@@ -16,6 +16,9 @@
 #include "CodeRegionGenerator.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
+// IPU local patch begin
+#include "llvm/CodeGen/TargetOpcodes.h"
+// IPU local patch end
 #include "llvm/MC/MCParser/MCAsmLexer.h"
 #include "llvm/MC/MCParser/MCTargetAsmParser.h"
 #include "llvm/MC/MCStreamer.h"
@@ -50,6 +53,18 @@ public:
   // We only want to intercept the emission of new instructions.
   virtual void emitInstruction(const MCInst &Inst,
                                const MCSubtargetInfo & /* unused */) override {
+    // IPU local patch begin
+    if (Inst.getOpcode() == TargetOpcode::BUNDLE) {
+      // if instruction is a bundle, add inner instructions to region
+      for (unsigned i = 0; i < Inst.getNumOperands(); i++) {
+
+        assert(Inst.getOperand(i).isInst() &&
+               "Expect operand of a bundle to be an MCInst");
+
+        Regions.addInstruction(*(Inst.getOperand(i).getInst()));
+      }
+    }
+    // IPU local patch end
     Regions.addInstruction(Inst);
   }
 

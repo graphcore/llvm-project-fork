@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This class implements a parser for assembly files similar to gas syntax.
@@ -1780,6 +1782,22 @@ bool AsmParser::parseBinOpRHS(unsigned Precedence, const MCExpr *&Res,
 bool AsmParser::parseStatement(ParseStatementInfo &Info,
                                MCAsmParserSemaCallback *SI) {
   assert(!hasPendingError() && "parseStatement started with pending error");
+  // IPU local patch begin
+  // IPU TODO: check if this can go
+  // Statements always start with an identifier.
+  AsmToken ID = getTok();
+  SMLoc IDLoc = ID.getLoc();
+  StringRef IDVal;
+  int64_t LocalLabelVal = -1;
+  StartTokLoc = ID.getLoc();
+
+  if (!TheCondState.Ignore) {
+    getTargetParser().onStatementPrefix(ID);
+    ID = getTok();
+    IDLoc = ID.getLoc();
+    IDVal = getTok().getString();
+  }
+
   // Eat initial spaces and comments
   while (Lexer.is(AsmToken::Space))
     Lex();
@@ -1791,12 +1809,7 @@ bool AsmParser::parseStatement(ParseStatementInfo &Info,
     Lex();
     return false;
   }
-  // Statements always start with an identifier.
-  AsmToken ID = getTok();
-  SMLoc IDLoc = ID.getLoc();
-  StringRef IDVal;
-  int64_t LocalLabelVal = -1;
-  StartTokLoc = ID.getLoc();
+  // IPU local patch end
   if (Lexer.is(AsmToken::HashDirective))
     return parseCppHashLineFilenameComment(IDLoc,
                                            !isInsideMacroInstantiation());

@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This file assembles .s files and emits ELF .o object files.
@@ -124,6 +126,12 @@ void MCELFStreamer::emitAssemblerFlag(MCAssemblerFlag Flag) {
   // Do any generic stuff we need to do.
   switch (Flag) {
   case MCAF_SyntaxUnified: return; // no-op here.
+  // IPU local patch begin
+  case MCAF_AllowInvalidRepeat: return; // no-op here.
+  case MCAF_AllowOptimizations: return; // no-op here.
+  case MCAF_Supervisor: return; // no-op here.
+  case MCAF_Worker: return;     // no-op here.
+  // IPU local patch end
   case MCAF_Code16: return; // Change parsing mode; no-op here.
   case MCAF_Code32: return; // Change parsing mode; no-op here.
   case MCAF_Code64: return; // Change parsing mode; no-op here.

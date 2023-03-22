@@ -60,12 +60,8 @@ def main():
   initial_args = common.parse_commandline_args(parser)
 
   script_name = os.path.basename(__file__)
-  opt_basename = os.path.basename(initial_args.opt_binary)
-  if not re.match(r'^opt(-\d+)?(\.exe)?$', opt_basename):
-    common.error('Unexpected opt name: ' + opt_basename)
-    sys.exit(1)
   opt_basename = 'opt'
-
+  
   for ti in common.itertests(initial_args.tests, parser,
                              script_name='utils/' + script_name):
     # If requested we scrub trailing attribute annotations, e.g., '#0', together with whitespaces

@@ -1,6 +1,10 @@
 ## Unsupported on windows as marking files "unreadable"
 ## is non-trivial on windows.
 # UNSUPPORTED: system-windows
+# IPU local patch begin
+# Test fails when run as root, as done in CI.
+# UNSUPPORTED: true
+# IPU local patch end
 
 # RUN: rm -rf %t && mkdir -p %t
 # RUN: echo file1 > %t/1.txt

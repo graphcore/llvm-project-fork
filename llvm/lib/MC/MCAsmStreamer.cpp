@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ADT/Optional.h"
@@ -558,6 +560,12 @@ void MCAsmStreamer::emitAssemblerFlag(MCAssemblerFlag Flag) {
   case MCAF_Code16:                OS << '\t'<< MAI->getCode16Directive();break;
   case MCAF_Code32:                OS << '\t'<< MAI->getCode32Directive();break;
   case MCAF_Code64:                OS << '\t'<< MAI->getCode64Directive();break;
+// IPU local patch begin
+  case MCAF_AllowInvalidRepeat:    OS << "\t.allow_invalid_repeat"; break;
+  case MCAF_AllowOptimizations:    OS << "\t.allow_optimizations"; break;
+  case MCAF_Supervisor:            OS << "\t.supervisor"; break;
+  case MCAF_Worker:                OS << "\t.worker"; break;
+// IPU local patch end
   }
   EmitEOL();
 }

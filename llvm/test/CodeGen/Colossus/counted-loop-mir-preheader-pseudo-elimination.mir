@@ -1,0 +1,58 @@
+# RUN: llc -march=colossus -verify-machineinstrs -run-pass colossus-counted-loop-mir -o - %s | FileCheck %s
+
+# Check that CLOOP_BEGIN_VALUE and CLOOP_BEGIN_TERMINATOR are being removed
+# in absence of CLOOP_END_VALUE and CLOOP_END_BRANCH even if they are in a
+# predecessor with several successors.
+#
+# Note: IR block is only needed because of the references in the MIR and thus
+# declaration and definitions are dummy because do not need to match for the
+# counted loop MIR pass to work correctly.
+
+# CHECK-NOT: CLOOP_BEGIN_
+--- |
+  declare void @abort()
+  define void @_ZN6poplin11WgdPartialsIDhE7computeEv() { ret void }
+
+...
+---
+name:            _ZN6poplin11WgdPartialsIDhE7computeEv
+tracksRegLiveness: true
+machineFunctionInfo: {}
+body:             |
+  bb.0:
+    successors: %bb.3, %bb.1
+    liveins: $m0, $m1
+  
+    $m2 = LD32_ZI $m0, $mzero, 0, 0
+    $m3 = LD32_ZI $m1, $mzero, 0, 0
+    $m3 = CLOOP_BEGIN_VALUE killed $m3, 0
+    $m0 = ADD killed $m1, killed $m0, 0
+    CLOOP_BEGIN_TERMINATOR $m3, 0
+    BRNZ $m2, %bb.1, 0
+    BR %bb.3, 0
+  
+  bb.1:
+    successors: %bb.2, %bb.4
+    liveins: $m3, $m2
+  
+    $m3 = ADD_SI killed $m3, -1, 0
+    $m2 = ADD_SI killed $m2, -1, 0
+    BRZ $m3, %bb.4, 0
+  
+  bb.2:
+    successors: %bb.3, %bb.1
+    liveins: $m3, $m2
+  
+    BRNZ $m2, %bb.1, 0
+  
+  bb.3:
+    successors: 
+  
+    $lr = CALL @abort, 0, cc_save, implicit-def $lr, implicit-def dead $lr, implicit-def $sp
+
+  bb.4:
+    liveins: $lr
+  
+    RTN $lr, 0
+  
+...

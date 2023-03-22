@@ -1,5 +1,9 @@
+// This file has been modified by Graphcore Ltd.
 // NetBSD: noatime mounts currently inhibit 'touch -a' updates
 // UNSUPPORTED: system-netbsd
+// IPU local patch begin
+// UNSUPPORTED: colossus
+// IPU local patch end
 
 // Test the automatic pruning of module cache entries.
 #ifdef IMPORT_DEPENDS_ON_MODULE

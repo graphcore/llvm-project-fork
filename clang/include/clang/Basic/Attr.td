@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 // The documentation is organized by category. Attributes can have category-
@@ -4036,3 +4038,22 @@ def NoRandomizeLayout : InheritableAttr {
   let LangOpts = [COnly];
 }
 def : MutualExclusions<[RandomizeLayout, NoRandomizeLayout]>;
+
+// IPU local patch begin
+/// Colossus attributes.
+def TargetColossus : TargetArch<["colossus"]>;
+def ColossusVertex : Attr, TargetSpecificAttr<TargetColossus> {
+  let Spellings = [GNU<"colossus_vertex">,
+                   CXX11<"colossus", "vertex">];
+  let Subjects = SubjectList<[FunctionLike]>;
+  let Documentation = [Undocumented];
+}
+
+// Specification of constraints, eg that vertices impose on their edges
+def PoplarConstraint :  Attr {
+  let Spellings = [CXX11<"poplar", "constraint", 201603>];
+  let Subjects = SubjectList<[Struct, Function], ErrorDiag, "ExpectedFunctionMethodOrClass">;
+  let Args = [VariadicStringArgument<"Cond">];
+  let Documentation = [Undocumented];
+}
+// IPU local patch end

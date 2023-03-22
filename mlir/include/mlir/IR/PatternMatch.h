@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #ifndef MLIR_IR_PATTERNMATCH_H
@@ -1097,7 +1099,7 @@ template <typename PDLFnT, std::size_t... I>
 void assertArgs(PatternRewriter &rewriter, ArrayRef<PDLValue> values,
                 std::index_sequence<I...>) {
   // We only want to do verification in debug builds, same as with `assert`.
-#if LLVM_ENABLE_ABI_BREAKING_CHECKS
+#if LLVM_ENABLE_ABI_BREAKING_CHECKS && !defined(NDEBUG) // IPU local patch
   using FnTraitsT = llvm::function_traits<PDLFnT>;
   auto errorFn = [&](const Twine &msg) -> LogicalResult {
     llvm::report_fatal_error(msg);

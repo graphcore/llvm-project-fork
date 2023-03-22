@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Object/ELF.h"
@@ -87,6 +89,15 @@ StringRef llvm::object::getELFRelocationTypeName(uint32_t Machine,
       break;
     }
     break;
+  // IPU local patch begin
+  case ELF::EM_GRAPHCORE_IPU:
+    switch (Type) {
+#include "llvm/BinaryFormat/ELFRelocs/Colossus.def"
+    default:
+      break;
+    }
+    break;
+  // IPU local patch end
   case ELF::EM_LANAI:
     switch (Type) {
 #include "llvm/BinaryFormat/ELFRelocs/Lanai.def"

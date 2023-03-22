@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // The driver drives the entire linking process. It is responsible for
@@ -126,6 +128,26 @@ bool elf::link(ArrayRef<const char *> args, llvm::raw_ostream &stdoutOS,
 
   return errorCount() == 0;
 }
+
+// IPU local patch begin
+
+template <class T, unsigned N> void resetSmallVector(SmallVector<T, N> &v) {
+  auto addr = &v;
+  v.~SmallVector<T, N>();
+  new (addr) SmallVector<T, N>();
+}
+
+void elf::reset() {
+  resetSmallVector(inputSections);
+  resetSmallVector(outputSections);
+  resetSmallVector(ctx->binaryFiles);
+  resetSmallVector(ctx->bitcodeFiles);
+  resetSmallVector(ctx->lazyBitcodeFiles);
+  resetSmallVector(ctx->objectFiles);
+  resetSmallVector(ctx->sharedFiles);
+  partitions.shrink_to_fit();
+}
+// IPU local patch end
 
 // Parses a linker -m option.
 static std::tuple<ELFKind, uint16_t, uint8_t> parseEmulation(StringRef emul) {
@@ -1087,6 +1109,9 @@ static void readConfigs(opt::InputArgList &args) {
       args.hasArg(OPT_ignore_data_address_equality);
   config->ignoreFunctionAddressEquality =
       args.hasArg(OPT_ignore_function_address_equality);
+// IPU local patch begin
+  config->ignoreRelocations = args.hasArg(OPT_ignore_relocations);
+// IPU local patch end
   config->init = args.getLastArgValue(OPT_init, "_init");
   config->ltoAAPipeline = args.getLastArgValue(OPT_lto_aa_pipeline);
   config->ltoCSProfileGenerate = args.hasArg(OPT_lto_cs_profile_generate);

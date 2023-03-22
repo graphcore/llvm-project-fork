@@ -1,3 +1,9 @@
+; This file has been modified by Graphcore Ltd.
+; IPU local patch begin
+; Operators `new` and `delete` are not supported on Colossus.
+; UNSUPPORTED: colossus
+; IPU local patch end
+
 ; RUN: llc < %s
 ; PR10733
 declare void @_Znam()

@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This header contains common, non-processor-specific data structures and
@@ -317,6 +319,9 @@ enum {
   EM_RISCV = 243,         // RISC-V
   EM_LANAI = 244,         // Lanai 32-bit processor
   EM_BPF = 247,           // Linux kernel bpf virtual machine
+  // IPU local patch begin
+  EM_GRAPHCORE_IPU = 248, // Graphcore Intelligent Processing Unit
+  // IPU local patch end
   EM_VE = 251,            // NEC SX-Aurora VE
   EM_CSKY = 252,          // C-SKY 32-bit processor
   EM_LOONGARCH = 258,     // LoongArch
@@ -904,6 +909,24 @@ enum {
 enum {
 #include "ELFRelocs/LoongArch.def"
 };
+
+// IPU local patch begin
+// ELF Relocation types for Colossus
+enum {
+#include "ELFRelocs/Colossus.def"
+};
+
+// Graphcore-specific e_flags
+enum : unsigned {
+  // Architecture version.
+  EF_GRAPHCORE_ARCH_IPU1 = 0x00000001,
+  EF_GRAPHCORE_ARCH_IPU2 = 0x00000002,
+  EF_GRAPHCORE_ARCH_IPU21 = 0x00000021,
+  // Mask for the architecture version.
+  EF_GRAPHCORE_ARCH = 0x000000ff,
+
+};
+// IPU local patch end
 
 #undef ELF_RELOC
 

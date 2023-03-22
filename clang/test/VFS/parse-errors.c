@@ -1,3 +1,7 @@
+// This file has been modified by Graphcore Ltd.
+// IPU local patch begin
+// UNSUPPORTED: true
+// IPU local patch end
 // RUN: not %clang_cc1 -ivfsoverlay %S/Inputs/invalid-yaml.yaml -fsyntax-only %s 2>&1 | FileCheck %s
 // CHECK: invalid virtual filesystem overlay file
 

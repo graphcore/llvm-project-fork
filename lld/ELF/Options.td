@@ -1,3 +1,4 @@
+// This file has been modified by Graphcore Ltd.
 include "llvm/Option/OptParser.td"
 
 // Convenience classes for long options which only accept two dashes. For lld
@@ -249,6 +250,11 @@ def ignore_function_address_equality: FF<"ignore-function-address-equality">,
 
 def ignore_data_address_equality: FF<"ignore-data-address-equality">,
   HelpText<"lld can break the address equality of data">;
+
+// IPU local patch begin
+def ignore_relocations: F<"ignore-relocations">,
+  HelpText<"don't resolve relocations when writing sections">;
+// IPU local patch end
 
 defm image_base: EEq<"image-base", "Set the base address">;
 

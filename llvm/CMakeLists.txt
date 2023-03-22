@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 # See docs/CMake.html for instructions about how to build LLVM with CMake.
 
 cmake_minimum_required(VERSION 3.13.4)
@@ -84,7 +85,9 @@ endif()
 # LLVM_EXTERNAL_${project}_SOURCE_DIR using LLVM_ALL_PROJECTS
 # This allows an easy way of setting up a build directory for llvm and another
 # one for llvm+clang+... using the same sources.
+# IPU local patch begin
 set(LLVM_ALL_PROJECTS "bolt;clang;clang-tools-extra;compiler-rt;cross-project-tests;libc;libclc;libcxx;libcxxabi;libunwind;lld;lldb;mlir;openmp;polly;pstl")
+# IPU local patch end
 # The flang project is not yet part of "all" projects (see C++ requirements)
 set(LLVM_EXTRA_PROJECTS "flang")
 # List of all known projects in the mono repo
@@ -365,6 +368,9 @@ set(LLVM_ALL_TARGETS
   ARM
   AVR
   BPF
+# IPU local patch begin
+  Colossus
+# IPU local patch end
   Hexagon
   Lanai
   Mips
@@ -1051,6 +1057,9 @@ endif()
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories( ${LLVM_INCLUDE_DIR} ${LLVM_MAIN_INCLUDE_DIR})
+# IPU local patch begin
+include_directories(${LLVM_BINARY_DIR}/../../../generated/headers)
+# IPU local patch end
 
 # when crosscompiling import the executable targets from a file
 if(LLVM_USE_HOST_TOOLS)
@@ -1287,3 +1296,15 @@ endif()
 if (LLVM_INCLUDE_UTILS AND LLVM_INCLUDE_TOOLS)
   add_subdirectory(utils/llvm-locstats)
 endif()
+
+# IPU local patch begin
+# Install FileCheck to use externally for testing.
+# Install llvm-lit for convenience.
+install(FILES ${LLVM_TOOLS_BINARY_DIR}/FileCheck
+              ${LLVM_TOOLS_BINARY_DIR}/llvm-lit
+              ${LLVM_TOOLS_BINARY_DIR}/not
+        DESTINATION bin
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE
+                    GROUP_READ GROUP_EXECUTE
+                    WORLD_READ WORLD_EXECUTE)
+# IPU local patch end

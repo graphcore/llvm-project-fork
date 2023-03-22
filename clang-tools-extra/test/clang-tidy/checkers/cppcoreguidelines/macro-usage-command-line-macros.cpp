@@ -1,3 +1,7 @@
+// This file has been modified by Graphcore Ltd.
+// IPU local patch begin
+// XFAIL: colossus
+// IPU local patch end
 // RUN: %check_clang_tidy -check-suffixes=NORMAL %s cppcoreguidelines-macro-usage %t -- -- -D_ZZZ_IM_A_MACRO
 // RUN: %check_clang_tidy -check-suffixes=NORMAL %s cppcoreguidelines-macro-usage %t -- -config='{CheckOptions: [{key: cppcoreguidelines-macro-usage.IgnoreCommandLineMacros, value: true}]}' -- -D_ZZZ_IM_A_MACRO
 // RUN: %check_clang_tidy -check-suffixes=NORMAL,CL %s cppcoreguidelines-macro-usage %t -- -config='{CheckOptions: [{key: cppcoreguidelines-macro-usage.IgnoreCommandLineMacros, value: false}]}' -- -D_ZZZ_IM_A_MACRO

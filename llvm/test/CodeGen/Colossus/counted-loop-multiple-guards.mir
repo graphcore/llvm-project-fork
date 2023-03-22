@@ -1,0 +1,58 @@
+# RUN: llc -march=colossus -verify-machineinstrs -run-pass colossus-counted-loop-mir -o - %s | FileCheck %s
+
+# Check that both guards get lowered or removed by the counted loop MIR pass.
+# CHECK-NOT: CLOOP_GUARD_BRANCH
+---
+name:            multiple_loop_guard
+tracksRegLiveness: true
+machineFunctionInfo: {}
+body:             |
+  bb.0.entry:
+    successors: %bb.1, %bb.4
+    liveins: $m0, $m1, $m2
+  
+    $m4 = AND_ZI killed $m0, 1, 0
+    $m3 = AND_ZI $m1, 255, 0
+    $m0 = SETZI 42, 0
+    BRZ $m4, %bb.4, 0
+  
+  bb.1:
+    successors: %bb.2, %bb.5
+    liveins: $m0, $m1, $m2, $m3
+  
+    $m1 = nuw nsw ADD_ZI killed $m1, 1, 0
+    $m1 = AND_ZI killed $m1, 255, 0
+    CLOOP_GUARD_BRANCH $m1, %bb.5, 0
+    BR %bb.2, 0
+  
+  bb.4:
+    successors: %bb.2, %bb.5
+    liveins: $m0, $m1, $m2, $m3
+  
+    CLOOP_GUARD_BRANCH $m1, %bb.5, 0
+    BR %bb.2, 0
+  
+  bb.2:
+    liveins: $m2, $m3
+  
+    $m1 = OR_ZI $mzero, 0, 0
+    $m3 = CLOOP_BEGIN_VALUE killed $m3, 1
+    $m0 = SETZI 42, 0
+    CLOOP_BEGIN_TERMINATOR $m3, 1
+  
+  bb.3:
+    successors: %bb.3, %bb.5
+    liveins: $m0, $m1, $m2, $m3
+  
+    $m4 = LD32 $m2, $mzero, $m1, 0
+    $m3 = CLOOP_END_VALUE killed $m3, 1
+    $m0 = ADD killed $m4, killed $m0, 0
+    $m1 = nuw nsw ADD_ZI killed $m1, 1, 0
+    CLOOP_END_BRANCH $m3, %bb.3, 1
+  
+  bb.5:
+    liveins: $m0, $lr
+  
+    RTN $lr, 0
+
+...

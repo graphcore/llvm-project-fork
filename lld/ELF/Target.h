@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #ifndef LLD_ELF_TARGET_H
@@ -179,6 +181,9 @@ TargetInfo *getAVRTargetInfo();
 TargetInfo *getHexagonTargetInfo();
 TargetInfo *getMSP430TargetInfo();
 TargetInfo *getPPC64TargetInfo();
+// IPU local patch begin
+TargetInfo *getColossusTargetInfo();
+// IPU local patch end
 TargetInfo *getPPCTargetInfo();
 TargetInfo *getRISCVTargetInfo();
 TargetInfo *getSPARCV9TargetInfo();

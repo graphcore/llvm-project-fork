@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This file declares the ELFObjectFile template class.
@@ -58,6 +60,9 @@ class ELFObjectFileBase : public ObjectFile {
   SubtargetFeatures getRISCVFeatures() const;
 
   StringRef getAMDGPUCPUName() const;
+  // IPU local patch begin
+  StringRef getColossusArchName() const;
+  // IPU local patch end
 
 protected:
   ELFObjectFileBase(unsigned int Type, MemoryBufferRef Source);
@@ -1211,6 +1216,10 @@ StringRef ELFObjectFile<ELFT>::getFileFormatName() const {
       return "elf32-amdgpu";
     case ELF::EM_LOONGARCH:
       return "elf32-loongarch";
+    // IPU local patch begin
+    case ELF::EM_GRAPHCORE_IPU:
+      return "elf32-colossus";
+    // IPU local patch end
     default:
       return "elf32-unknown";
     }
@@ -1319,6 +1328,10 @@ template <class ELFT> Triple::ArchType ELFObjectFile<ELFT>::getArch() const {
 
   case ELF::EM_BPF:
     return IsLittleEndian ? Triple::bpfel : Triple::bpfeb;
+	// IPU local patch begin
+  case ELF::EM_GRAPHCORE_IPU:
+    return Triple::colossus;
+  // IPU local patch end
 
   case ELF::EM_VE:
     return Triple::ve;

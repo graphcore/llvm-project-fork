@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 from __future__ import print_function
 import re
 import sys
@@ -202,6 +203,14 @@ ASM_FUNCTION_NVPTX_RE = re.compile(
     # function body end marker
     r'\s*// -- End function',
     flags=(re.M | re.S))
+
+# IPU local patch begin
+ASM_FUNCTION_COLOSSUS_RE = re.compile(
+    r'^_?(?P<func>[^:]+):[ \t]*#+[ \t]*@(?P=func)\n(?:\s*\.?Lfunc_begin[^:\n]*:\n)?[^:]*?'
+    r'(?P<body>^##?[ \t]+[^:]+:.*?)\s*'
+    r'^\s*(?:[^:\n]+?:\s*\n\s*\.size|\.cfi_endproc|\.globl|\.comm|\.(?:sub)?section|#+ -- End function)',
+    flags=(re.M | re.S))
+# IPU local patch end
 
 SCRUB_X86_SHUFFLES_RE = (
     re.compile(
@@ -423,6 +432,18 @@ def scrub_asm_nvptx(asm, args):
   asm = common.SCRUB_TRAILING_WHITESPACE_RE.sub(r'', asm)
   return asm
 
+# IPU local patch begin
+def scrub_asm_colossus(asm, args):
+  # Scrub runs of whitespace out of the assembly, but leave the leading
+  # whitespace in place.
+  asm = common.SCRUB_WHITESPACE_RE.sub(r' ', asm)
+  # Expand the tabs used for indentation.
+  asm = string.expandtabs(asm, 2)
+  # Strip trailing whitespace.
+  asm = common.SCRUB_TRAILING_WHITESPACE_RE.sub(r'', asm)
+  return asm
+# IPU local patch end
+
 # Returns a tuple of a scrub function and a function regex. Scrub function is
 # used to alter function body in some way, for example, remove trailing spaces.
 # Function regex is used to match function name, body, etc. in raw llc output.
@@ -464,7 +485,10 @@ def get_run_handler(triple):
       'wasm32': (scrub_asm_wasm32, ASM_FUNCTION_WASM32_RE),
       've': (scrub_asm_ve, ASM_FUNCTION_VE_RE),
       'csky': (scrub_asm_csky, ASM_FUNCTION_CSKY_RE),
-      'nvptx': (scrub_asm_nvptx, ASM_FUNCTION_NVPTX_RE)
+# IPU local patch begin
+      'nvptx': (scrub_asm_nvptx, ASM_FUNCTION_NVPTX_RE),
+      'colossus': (scrub_asm_colossus, ASM_FUNCTION_COLOSSUS_RE),
+# IPU local patch end
   }
   handler = None
   best_prefix = ''

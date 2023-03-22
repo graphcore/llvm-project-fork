@@ -1,8 +1,9 @@
 {
-  "phabricator.uri" : "https://reviews.llvm.org/",
-  "repository.callsign" : "G",
-  "conduit_uri" : "https://reviews.llvm.org/",
+  "project_id": "llvm",
+  "phabricator.uri" : "https://phabricator.sourcevertex.net/",
+  "repository.callsign" : "LLVMPROJECT",
+  "conduit_uri" : "https://phabricator.sourcevertex.net/",
   "base": "git:HEAD^",
-  "arc.land.onto.default": "main",
-  "arc.land.onto": ["main"]
+  "arc.land.onto.default": "colossus",
+  "arc.land.onto": ["colossus"]
 }

@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This file declares helper functions for running LLVM in a multi-threaded
@@ -38,6 +40,12 @@
 #else
 #define LLVM_THREADING_USE_STD_CALL_ONCE 0
 #endif
+
+// IPU local patch begin
+// TODO: Temporary disable std::call_once for colossus due to runtime failures
+#undef LLVM_THREADING_USE_STD_CALL_ONCE
+#define LLVM_THREADING_USE_STD_CALL_ONCE 0
+// IPU local patch end
 
 #if LLVM_THREADING_USE_STD_CALL_ONCE
 #include <mutex>

@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===---------------------------------------------------------------------===//
 
 // To test that the documentation builds cleanly, you must run clang-tblgen to
@@ -4978,6 +4980,7 @@ the old mangled name and the new code will use the new mangled name with tags.
   }];
 }
 
+// IPU local patch begin
 def BuiltinAliasDocs : Documentation {
   let Category = DocCatFunction;
   let Heading = "clang::builtin_alias, clang_builtin_alias";
@@ -4991,12 +4994,13 @@ This ensures that both functions are recognized as that clang builtin,
 and in the latter case, the choice of which builtin to identify the
 function as can be deferred until after overload resolution.
 
-This attribute can only be used to set up the aliases for certain ARM/RISC-V
-C intrinsic functions; it is intended for use only inside ``arm_*.h`` and
-``riscv_*.h`` and is not a general mechanism for declaring arbitrary aliases
-for clang builtin functions.
+This attribute can only be used to set up the aliases for certain
+ARM/RISC-V/IPU C intrinsic functions; it is intended for use only inside
+``arm_*.h``, ``riscv_*.h`` and ``ipu_*.h`` and is not a general mechanism for
+declaring arbitrary aliases for clang builtin functions.
   }];
 }
+// IPU local patch end
 
 def PreferredNameDocs : Documentation {
   let Category = DocCatDecl;

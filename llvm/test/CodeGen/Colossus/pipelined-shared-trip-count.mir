@@ -1,0 +1,152 @@
+# RUN: llc -march=colossus -verify-machineinstrs -run-pass=pipeliner \
+# RUN:   -enable-pipeliner -o - %s | FileCheck %s
+
+# Check that when the trip count of a loop preheader is also used by
+# another loop preheader it does not get decremented in place by the
+# pipeliner.
+
+# CHECK:      successors: %[[LOOP_PH1:bb.[0-9]+]]
+# CHECK:      %5:mr = SETZI 3, 0
+# CHECK:      [[LOOP_PH1]]:
+# CHECK-NOT:  bb.[[#]]:
+# CHECK:        %173:mr = ADD_SI %5, -1, 0
+# CHECK-NEXT:   %145:mr = CLOOP_BEGIN_VALUE %173, 1
+# CHECK-NEXT:   CLOOP_BEGIN_TERMINATOR %145, 1
+# CHECK:      bb.[[#]]:
+# CHECK:        %131:mr = ADD_SI %5, -1, 0
+# CHECK-NEXT:   %129:mr = SETZI 1, 0
+# CHECK-NEXT:   %130:mr = CMPSLT %129, %5, 0
+# CHECK-NEXT:   CLOOP_GUARD_BRANCH %130, %bb.[[#]], 0
+# CHECK-NEXT:   BR %[[LOOP_PH2:bb.[0-9]+]], 0
+# CHECK-NEXT:  {{ +}}
+# CHECK-NEXT: [[LOOP_PH2]]:
+# CHECK-NOT:  bb.[[#]]:
+# CHECK:        %101:mr = CLOOP_BEGIN_VALUE %131, 1
+# CHECK-NEXT:   CLOOP_BEGIN_TERMINATOR %101, 1
+
+---
+name:            main
+tracksRegLiveness: true
+body:             |
+  bb.0:
+    successors: %bb.1
+  
+    %19:mr = SETZI 65535, 0
+    %21:mrpair = IMPLICIT_DEF
+    %20:mrpair = INSERT_SUBREG %21, killed %19, %subreg.SubRegLo
+    %22:mr = COPY $mzero
+    %18:mrpair = INSERT_SUBREG %20, %22, %subreg.SubRegHi
+    %23:mr = SETZI 3, 0
+    %0:mr = CLOOP_BEGIN_VALUE %23, 1
+    %17:mr = SETZI 2048, 0
+    %26:mr = SETZI 1, 0
+    %30:mrpair = IMPLICIT_DEF
+    %39:mrpair = IMPLICIT_DEF
+    CLOOP_BEGIN_TERMINATOR %0, 1
+  
+  bb.1:
+    successors: %bb.1, %bb.2
+  
+    %1:mr = PHI %17, %bb.0, %5, %bb.1
+    %2:mrpair = PHI %18, %bb.0, %4, %bb.1
+    %3:mr = PHI %0, %bb.0, %6, %bb.1
+    %24:mr = LD32_ZI %1, $mzero, 1, 0
+    %5:mr, %25:mr = LD32STEP_SI $mzero, %1, 2, 0
+    %27:mr = SHL %26, killed %24, 0
+    %28:mr = SHL %26, killed %25, 0
+    %29:mrpair = INSERT_SUBREG %30, killed %28, %subreg.SubRegLo
+    %31:mrpair = INSERT_SUBREG %29, killed %27, %subreg.SubRegHi
+    %32:mr = COPY %31.SubRegHi
+    %33:mr = COPY %2.SubRegHi
+    %34:mr = XOR killed %32, killed %33, 0
+    %35:mr = COPY %31.SubRegLo
+    %36:mr = COPY %2.SubRegLo
+    %37:mr = XOR killed %35, killed %36, 0
+    %38:mrpair = INSERT_SUBREG %39, killed %37, %subreg.SubRegLo
+    %4:mrpair = INSERT_SUBREG %38, killed %34, %subreg.SubRegHi
+    %6:mr = CLOOP_END_VALUE %3, 1
+    CLOOP_END_BRANCH %6, %bb.1, 1
+    BR %bb.2, 0
+  
+  bb.2:
+    successors: %bb.3
+  
+    %41:mr = COPY %4.SubRegHi
+    %43:mrpair = IMPLICIT_DEF
+    %42:mrpair = INSERT_SUBREG %43, %41, %subreg.SubRegLo
+    %45:mr = IMPLICIT_DEF
+    %44:mrpair = INSERT_SUBREG %42, killed %45, %subreg.SubRegHi
+    %46:mr = COPY %44.SubRegHi
+    %47:mr = XOR %41, killed %46, 0
+    %48:mr = COPY %44.SubRegLo
+    %49:mr = COPY %4.SubRegLo
+    %50:mr = XOR killed %49, killed %48, 0
+    %52:mrpair = IMPLICIT_DEF
+    %51:mrpair = INSERT_SUBREG %52, killed %50, %subreg.SubRegLo
+    %53:mrpair = INSERT_SUBREG %51, killed %47, %subreg.SubRegHi
+    %54:mr = COPY %53.SubRegLo
+    %56:mrpair = IMPLICIT_DEF
+    %55:mrpair = INSERT_SUBREG %56, killed %54, %subreg.SubRegLo
+    %57:mr = COPY $mzero
+    %8:mrpair = INSERT_SUBREG %55, %57, %subreg.SubRegHi
+    %9:mr = CLOOP_BEGIN_VALUE %23, 1
+    %40:mr = SETZI 2048, 0
+    %65:mrpair = IMPLICIT_DEF
+    %74:mrpair = IMPLICIT_DEF
+    CLOOP_BEGIN_TERMINATOR %9, 1
+  
+  bb.3:
+    successors: %bb.3, %bb.4
+  
+    %10:mr = PHI %40, %bb.2, %14, %bb.3
+    %11:mrpair = PHI %8, %bb.2, %13, %bb.3
+    %12:mr = PHI %9, %bb.2, %15, %bb.3
+    %59:mr = LD32_ZI %10, $mzero, 1, 0
+    %14:mr, %60:mr = LD32STEP_SI $mzero, %10, 2, 0
+    %62:mr = SHL %26, killed %59, 0
+    %63:mr = SHL %26, killed %60, 0
+    %64:mrpair = INSERT_SUBREG %65, killed %63, %subreg.SubRegLo
+    %66:mrpair = INSERT_SUBREG %64, killed %62, %subreg.SubRegHi
+    %67:mr = COPY %66.SubRegHi
+    %68:mr = COPY %11.SubRegHi
+    %69:mr = XOR killed %67, killed %68, 0
+    %70:mr = COPY %66.SubRegLo
+    %71:mr = COPY %11.SubRegLo
+    %72:mr = XOR killed %70, killed %71, 0
+    %73:mrpair = INSERT_SUBREG %74, killed %72, %subreg.SubRegLo
+    %13:mrpair = INSERT_SUBREG %73, killed %69, %subreg.SubRegHi
+    %15:mr = CLOOP_END_VALUE %12, 1
+    CLOOP_END_BRANCH %15, %bb.3, 1
+    BR %bb.4, 0
+  
+  bb.4:
+    %75:mr = COPY %13.SubRegHi
+    %77:mrpair = IMPLICIT_DEF
+    %76:mrpair = INSERT_SUBREG %77, %75, %subreg.SubRegLo
+    %79:mr = IMPLICIT_DEF
+    %78:mrpair = INSERT_SUBREG %76, killed %79, %subreg.SubRegHi
+    %80:mr = COPY %78.SubRegHi
+    %81:mr = XOR %75, killed %80, 0
+    %82:mr = COPY %78.SubRegLo
+    %83:mr = COPY %13.SubRegLo
+    %84:mr = XOR killed %83, killed %82, 0
+    %86:mrpair = IMPLICIT_DEF
+    %85:mrpair = INSERT_SUBREG %86, killed %84, %subreg.SubRegLo
+    %87:mrpair = INSERT_SUBREG %85, killed %81, %subreg.SubRegHi
+    %88:mr = COPY %87.SubRegLo
+    ADJCALLSTACKDOWN 8, 0, implicit-def dead $sp, implicit $sp
+    %89:ar = SETZI_A 65535, 0
+    ST32_ZI_A killed %89, $sp, $mzero, 1, 0
+    %90:mr = SETZI 42, 0
+    ST32_ZI %90, $sp, $mzero, 0, 0
+    ADJCALLSTACKUP 8, 0, implicit-def dead $sp, implicit $sp
+    ADJCALLSTACKDOWN 8, 0, implicit-def dead $sp, implicit $sp
+    ST32_ZI %90, $sp, $mzero, 0, 0
+    ST32_ZI killed %88, $sp, $mzero, 1, 0
+    ADJCALLSTACKUP 8, 0, implicit-def dead $sp, implicit $sp
+    %93:mr = COPY $mzero
+    $m0 = COPY %93
+    RTN_PSEUDO
+    RTN_REG_HOLDER implicit $m0
+
+...

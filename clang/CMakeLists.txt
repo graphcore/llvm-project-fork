@@ -7,6 +7,17 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   set(CLANG_BUILT_STANDALONE TRUE)
 endif()
 
+# IPU local patch begin
+if("ipu2" IN_LIST ENABLED_IPU_ARCH_NAMES)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIPU2")
+    add_definitions(-DIPU2)
+  endif()
+if("ipu21" IN_LIST ENABLED_IPU_ARCH_NAMES)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIPU21 -DIPU21PLUS")
+  add_definitions(-DIPU2 -DIPU21PLUS)
+endif()
+# IPU local patch end
+
 # Must go below project(..)
 include(GNUInstallDirs)
 

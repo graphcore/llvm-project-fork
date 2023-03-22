@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 //  This file implements type-related semantic analysis.
@@ -8260,6 +8262,10 @@ static void processTypeAttrs(TypeProcessingState &state, QualType &type,
           if (!IsTypeAttr)
             continue;
         }
+        // IPU local patch begin
+      } else if (attr.getScopeName() && attr.getScopeName()->isStr("poplar")) {
+        // Deal with [[poplar::...]] attributes below.
+        // IPU local patch end
       } else if (TAL != TAL_DeclSpec && TAL != TAL_DeclChunk &&
                  !attr.isTypeAttr()) {
         // Otherwise, only consider type processing for a C++11 attribute if

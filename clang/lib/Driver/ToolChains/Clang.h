@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 
 #ifndef LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_CLANG_H
@@ -79,6 +81,10 @@ private:
                                 llvm::opt::ArgStringList &CmdArgs) const;
   void AddVETargetArgs(const llvm::opt::ArgList &Args,
                        llvm::opt::ArgStringList &CmdArgs) const;
+  // IPU local patch begin
+  void AddColossusTargetArgs(const llvm::opt::ArgList &Args,
+                             llvm::opt::ArgStringList &CmdArgs) const;
+  // IPU local patch end
 
   enum RewriteKind { RK_None, RK_Fragile, RK_NonFragile };
 

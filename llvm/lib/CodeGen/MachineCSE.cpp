@@ -4,6 +4,8 @@
 // See https://llvm.org/LICENSE.txt for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
+// This file has been modified by Graphcore Ltd.
+//
 //===----------------------------------------------------------------------===//
 //
 // This pass performs global common subexpression elimination on machine
@@ -426,6 +428,12 @@ bool MachineCSE::isCSECandidate(MachineInstr *MI) {
   // be spilled and get loaded back with corrupted data.
   if (MI->getOpcode() == TargetOpcode::LOAD_STACK_GUARD)
     return false;
+
+  // IPU local patch begin
+  // Hook to ignore instructions depending on target specific requirements.
+  if (!TII->canBeCSECandidate(*MI))
+    return false;
+  // IPU local patch end
 
   return true;
 }

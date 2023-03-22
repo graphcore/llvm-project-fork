@@ -1,3 +1,7 @@
+// This file has been modified by Graphcore Ltd.
+// IPU local patch begin
+// UNSUPPORTED: true
+// IPU local patch end
 // FIXME: PR44221
 // UNSUPPORTED: system-windows
 

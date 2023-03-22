@@ -1,3 +1,4 @@
+# This file has been modified by Graphcore Ltd.
 # RUN: llvm-objdump -r %p/Inputs/trivial-object-test.coff-i386 \
 # RUN:              | FileCheck %s -check-prefix COFF-i386
 # RUN: llvm-objdump -r %p/Inputs/trivial-object-test.coff-x86-64 \
@@ -75,6 +76,10 @@ Symbols:
 
 # RUN: llvm-objdump -r %p/Inputs/trivial-object-test.elf-hexagon \
 # RUN:              | FileCheck %s -check-prefix ELF-hexagon
+# IPU local patch begin
+# RUN: llvm-objdump -r %p/Inputs/trivial-object-test.elf-colossus \
+# RUN:              | FileCheck %s -check-prefix ELF-colossus
+# IPU local patch end
 # RUN: llvm-objdump -r %p/Inputs/trivial-object-test.elf-mips64el \
 # RUN:              | FileCheck %s -check-prefix ELF-MIPS64EL
 # RUN: llvm-objdump -r %p/Inputs/trivial-object-test.elf-mipsel \
@@ -103,6 +108,13 @@ Symbols:
 # ELF-hexagon: R_HEX_B15_PCREL testf
 # ELF-hexagon: R_HEX_B22_PCREL puts
 
+# IPU local patch begin
+# ELF-colossus: .text
+# ELF-colossus: R_COLOSSUS_20 .rodata.str1.1
+# ELF-colossus: R_COLOSSUS_19_S2 puts
+# ELF-colossus: R_COLOSSUS_19_S2 SomeOtherFunction
+
+# IPU local patch end
 ## Note: this file was produced with gas to make sure we don't end up in a
 ## situation where LLVM produces and accepts a broken file.
 # ELF-MIPS64EL: .data
