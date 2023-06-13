@@ -1117,6 +1117,6 @@ ColossusAsmParser::~ColossusAsmParser() {
 }
 
 // Force static initialization.
-extern "C" void LLVMInitializeColossusAsmParser() {
+extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeColossusAsmParser() {
   RegisterMCAsmParser<ColossusAsmParser> X(getTheColossusTarget());
 }

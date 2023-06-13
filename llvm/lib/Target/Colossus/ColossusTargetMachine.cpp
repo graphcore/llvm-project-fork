@@ -194,7 +194,7 @@ void ColossusPassConfig::addPreEmitPass() {
 }
 
 // Force static initialization.
-extern "C" void LLVMInitializeColossusTarget() {
+extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeColossusTarget() {
   RegisterTargetMachine<ColossusTargetMachine> X(getTheColossusTarget());
   PassRegistry *PR = PassRegistry::getPassRegistry();
   initializeColossusCountedLoopMIRPass(*PR);

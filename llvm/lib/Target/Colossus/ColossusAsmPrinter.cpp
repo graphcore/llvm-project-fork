@@ -232,6 +232,6 @@ PrintAsmMemoryOperand(const MachineInstr *MI,
 }
 
 // Force static initialization.
-extern "C" void LLVMInitializeColossusAsmPrinter() {
+extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeColossusAsmPrinter() {
   RegisterAsmPrinter<ColossusAsmPrinter> X(getTheColossusTarget());
 }
