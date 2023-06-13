@@ -146,10 +146,6 @@ macro(test_target_arch arch def)
   endif()
 endmacro()
 
-# IPU local patch begin
-add_default_target_arch(ipu)
-# IPU local patch end
-
 macro(detect_target_arch)
   check_symbol_exists(__arm__ "" __ARM)
   check_symbol_exists(__AVR__ "" __AVR)
