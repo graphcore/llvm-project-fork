@@ -1,7 +1,7 @@
 
 ; llvm.returnaddress(c) with c>0 will always return 0 for Colossus
 
-; RUN: llc < %s | FileCheck %s
+; RUN: llc  -march=colossus < %s | FileCheck %s
 
 define i8* @retaddr(i32 %x) {
 entry:

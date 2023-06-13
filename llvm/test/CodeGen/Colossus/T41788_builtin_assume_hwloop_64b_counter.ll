@@ -1,4 +1,4 @@
-; RUN: llc -O3 --max-nops-in-rpt=10 %s -o - | FileCheck %s -check-prefix=CHECK
+; RUN: llc -march=colossus -O3 --max-nops-in-rpt=10 %s -o - | FileCheck %s -check-prefix=CHECK
 
 declare void @llvm.assume(i1 noundef)
 

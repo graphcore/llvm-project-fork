@@ -1,4 +1,4 @@
-; XFAIL: colossus
+; XFAIL: *
 ; RUN: llc < %s -march=colossus -mattr=+ipu1 | FileCheck %s
 ; RUN: llc < %s -march=colossus -mattr=+ipu2 | FileCheck %s
 ; RUN: llc -fp-contract=fast < %s -march=colossus | FileCheck %s --check-prefix FAST

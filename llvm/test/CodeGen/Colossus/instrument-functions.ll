@@ -1,4 +1,4 @@
-; RUN: llc -o - < %s | FileCheck %s
+; RUN: llc -march=colossus -o - < %s | FileCheck %s
 
 ; CHECK-LABEL: test1:
 ; CHECK: mov [[RET:\$m[0-9]+]], $m10
