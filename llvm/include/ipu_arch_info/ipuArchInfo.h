@@ -5,6 +5,8 @@
 #ifndef _ipuArchInfo_h_
 #define _ipuArchInfo_h_
 
+#include "llvm/Support/Compiler.h"
+
 #include <cstdint>
 #include <string>
 
@@ -23,6 +25,6 @@ struct IPUArchInfo {
   }
 };
 
-const IPUArchInfo &ipuArchInfoByName(const std::string &archName);
+extern "C" LLVM_EXTERNAL_VISIBILITY const IPUArchInfo &ipuArchInfoByName(const std::string &archName);
 
 #endif // _ipuArchInfo_h_
