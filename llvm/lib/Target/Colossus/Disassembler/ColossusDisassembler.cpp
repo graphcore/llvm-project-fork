@@ -421,7 +421,7 @@ static MCDisassembler *createColossusDisassembler(const Target &T,
   return new ColossusDisassembler(STI, Ctx);
 }
 
-extern "C" void LLVMInitializeColossusDisassembler() {
+extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeColossusDisassembler() {
   // Register the disassembler.
   TargetRegistry::RegisterMCDisassembler(getTheColossusTarget(),
                                          createColossusDisassembler);

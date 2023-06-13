@@ -203,7 +203,7 @@ static MCInstrAnalysis *createColossusMCInstrAnalysis(const MCInstrInfo *Info) {
 }
 
 // Force static initialization.
-extern "C" void LLVMInitializeColossusTargetMC() {
+extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeColossusTargetMC() {
   // Register the MC asm info.
   RegisterMCAsmInfoFn X(getTheColossusTarget(), createColossusMCAsmInfo);
 
